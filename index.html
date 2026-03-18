@@ -4,115 +4,102 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nick Walther | nickwalther.me</title>
-
-  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-E3MW8K62CV"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-E3MW8K62CV');
-  </script>
-
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-E3MW8K62CV');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0a0a0f;
-      color: #e0e0e0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-    }
-    .container {
-      max-width: 720px;
-      width: 100%;
-      text-align: center;
-    }
-    h1 {
-      font-size: 3rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #6ee7f7, #a78bfa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 0.5rem;
-    }
-    .tagline {
-      font-size: 1.1rem;
-      color: #9ca3af;
-      margin-bottom: 2.5rem;
-    }
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2.5rem;
-    }
-    .card {
-      background: #13131a;
-      border: 1px solid #2d2d3a;
-      border-radius: 12px;
-      padding: 1.5rem 1rem;
-      transition: border-color 0.2s;
-    }
-    .card:hover { border-color: #6ee7f7; }
-    .card h3 { font-size: 1rem; color: #e0e0e0; margin-bottom: 0.4rem; }
-    .card p { font-size: 0.85rem; color: #6b7280; }
-    .links a {
-      display: inline-block;
-      margin: 0.4rem;
-      padding: 0.6rem 1.4rem;
-      border-radius: 8px;
-      background: #1f1f2e;
-      color: #a78bfa;
-      text-decoration: none;
-      border: 1px solid #3d3d56;
-      font-size: 0.9rem;
-      transition: background 0.2s;
-    }
-    .links a:hover { background: #2a2a40; }
-    footer {
-      margin-top: 3rem;
-      font-size: 0.8rem;
-      color: #4b5563;
-    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--bg:#111010;--bg-card:#1E1C1A;--primary:#00E639;--accent:#22d3ee;--text:#D6D0C8;--text-muted:#7A756D;--text-dim:rgba(214,208,200,0.35);--border:rgba(0,230,57,0.13);--border-hover:rgba(0,230,57,0.55);--font-mono:'IBM Plex Mono',monospace;--font-sans:'Inter',system-ui,sans-serif}
+    html{scroll-behavior:smooth}
+    body{background:var(--bg);color:var(--text);font-family:var(--font-sans);font-size:16px;line-height:1.6;min-height:100vh;-webkit-font-smoothing:antialiased}
+    .nw-hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4rem 2rem 3rem;position:relative}
+    .nw-hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,230,57,0.015) 2px,rgba(0,230,57,0.015) 4px);pointer-events:none;z-index:0}
+    .nw-hero::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:1px;height:60px;background:linear-gradient(to bottom,rgba(0,230,57,0.4),transparent)}
+    .nw-hero>*{position:relative;z-index:1}
+    .nw-name{font-family:var(--font-mono);font-size:clamp(2.6rem,7vw,5.5rem);font-weight:600;color:var(--primary);text-shadow:0 0 20px rgba(0,230,57,0.6),0 0 60px rgba(0,230,57,0.2);animation:namePulse 4s ease-in-out infinite;letter-spacing:-0.02em;line-height:1.1;min-height:1.2em}
+    @keyframes namePulse{0%,100%{text-shadow:0 0 20px rgba(0,230,57,0.6),0 0 60px rgba(0,230,57,0.2)}50%{text-shadow:0 0 30px rgba(0,230,57,0.8),0 0 80px rgba(0,230,57,0.3)}}
+    .nw-cursor{display:inline-block;width:3px;height:0.85em;background:var(--primary);margin-left:4px;vertical-align:middle;animation:blink 1s step-end infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+    .nw-role{font-family:var(--font-mono);font-size:clamp(0.85rem,2vw,1.05rem);color:var(--accent);letter-spacing:0.08em;margin-top:1rem;min-height:1.4em}
+    .nw-tagline{font-family:var(--font-mono);font-size:clamp(0.75rem,1.5vw,0.9rem);color:var(--text-muted);margin-top:1.5rem;max-width:540px}
+    .nw-tagline .prompt{color:var(--primary)}
+    .nw-bio{max-width:900px;margin:0 auto;padding:5rem 2rem 4rem;display:grid;grid-template-columns:1fr 1fr;gap:3rem;border-top:1px solid var(--border)}
+    @media(max-width:640px){.nw-bio{grid-template-columns:1fr;gap:2rem;padding:3rem 1.5rem}}
+    .nw-bio-text{font-size:1rem;line-height:1.8;color:var(--text)}
+    .nw-bio-text p+p{margin-top:0.75rem}
+    .nw-bio-text a{color:var(--primary);text-decoration:none;border-bottom:1px solid rgba(0,230,57,0.3);transition:border-color 0.2s ease,color 0.2s ease}
+    .nw-bio-text a:hover{border-color:var(--primary);color:#fff}
+    .nw-bio-currently h3{font-family:var(--font-mono);font-size:0.75rem;font-weight:600;color:var(--primary);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:1rem}
+    .nw-bio-currently ul{list-style:none}
+    .nw-bio-currently li{font-size:0.95rem;color:var(--text);padding:0.5rem 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:0.6rem;line-height:1.5}
+    .nw-bio-currently li::before{content:'\25B8';color:var(--primary);flex-shrink:0;margin-top:1px}
+    .nw-bio-currently li span{color:var(--text-muted);font-size:0.82rem;display:block}
+    .nw-cards{max-width:900px;margin:0 auto;padding:2rem 2rem 5rem;display:grid;grid-template-columns:repeat(2,1fr);gap:1.25rem;perspective:1200px}
+    @media(max-width:580px){.nw-cards{grid-template-columns:1fr;padding:2rem 1.5rem 4rem}}
+    .nw-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:1.75rem 1.75rem 1.5rem;cursor:default;transition:opacity 0.6s cubic-bezier(0.22,1,0.36,1),transform 0.7s cubic-bezier(0.34,1.4,0.64,1),border-color 0.3s ease,box-shadow 0.4s ease,background 0.3s ease;transform-style:preserve-3d;will-change:transform;position:relative;display:flex;flex-direction:column;gap:0.6rem;aspect-ratio:4/3;opacity:0;transform:translateY(28px)}
+    .nw-card.revealed{opacity:1;transform:translateY(0px)}
+    .nw-card:hover{border-color:var(--border-hover)!important;box-shadow:0 16px 48px rgba(0,230,57,0.12),0 0 0 1px rgba(0,230,57,0.3)!important;background:#1a1f1a!important}
+    .nw-card-icon{color:var(--primary);width:24px;height:24px;flex-shrink:0}
+    .nw-card h2{font-family:var(--font-sans);font-size:1.05rem;font-weight:600;color:#fff;margin-top:0.25rem}
+    .nw-card p{font-size:0.9rem;color:var(--text-muted);line-height:1.6;flex:1}
+    .nw-contact{max-width:900px;margin:0 auto;padding:3rem 2rem 2rem;border-top:1px solid var(--border);text-align:center}
+    .nw-contact-label{font-family:var(--font-mono);font-size:0.72rem;color:var(--text-muted);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:1.5rem}
+    .nw-contact-label span{color:var(--primary)}
+    .nw-buttons{display:flex;flex-wrap:wrap;gap:0.75rem;justify-content:center;margin-bottom:2.5rem}
+    .nw-btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.4rem;border-radius:8px;border:1px solid var(--border-hover);background:transparent;color:var(--primary);font-family:var(--font-sans);font-size:0.9rem;font-weight:500;text-decoration:none;cursor:pointer;transition:background 0.18s ease,color 0.18s ease,box-shadow 0.18s ease}
+    .nw-btn:hover{background:rgba(0,230,57,0.1);box-shadow:0 0 16px rgba(0,230,57,0.15);color:#fff}
+    .nw-btn svg{width:16px;height:16px}
+    .nw-philosophy{font-style:italic;font-size:0.875rem;color:var(--text-dim);letter-spacing:0.04em;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.06);margin-bottom:1.25rem}
+    .nw-footer-copy{font-size:0.78rem;color:var(--text-muted);font-family:var(--font-mono)}
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Nick Walther</h1>
-    <p class="tagline">Educator · Developer · Technologist · Florida</p>
-
-    <div class="cards">
-      <div class="card">
-        <h3>Education</h3>
-        <p>Middle school technology teacher integrating AI into the classroom.</p>
-      </div>
-      <div class="card">
-        <h3>Development</h3>
-        <p>JavaScript, Python, and AI-powered tools for education and productivity.</p>
-      </div>
-      <div class="card">
-        <h3>Projects</h3>
-        <p>Building a digital space on Google infrastructure with GitHub Pages.</p>
-      </div>
-      <div class="card">
-        <h3>AI & Automation</h3>
-        <p>Leveraging Gemini, Perplexity, and Claude for smarter workflows.</p>
-      </div>
+  <section class="nw-hero">
+    <div class="nw-name" id="nw-name-el"></div>
+    <div class="nw-role" id="nw-role-el">&nbsp;</div>
+    <div class="nw-tagline"><span class="prompt">&gt;&nbsp;</span>Building AI-powered tools for the next generation of learners.</div>
+  </section>
+  <section class="nw-bio">
+    <div class="nw-bio-text">
+      <p>I'm a Technology, Computer Science &amp; AI Development teacher at <a href="https://www.thepineschool.org" target="_blank" rel="noopener"><strong>The Pine School</strong></a> in Hobe Sound, FL &mdash; where I spend my days helping middle schoolers build, create, and think critically with the tools that are reshaping the world.</p>
+      <p>Outside the classroom I write JavaScript and Python, automate workflows with AI, and build my own digital infrastructure on GitHub Pages and Google Cloud.</p>
+      <p>I believe the best technology disappears &mdash; it just makes the person using it more capable.</p>
     </div>
-
-    <div class="links">
-      <a href="https://github.com/nwalther02" target="_blank">GitHub</a>
-      <a href="mailto:nick@nickwalther.me">Email</a>
+    <div class="nw-bio-currently">
+      <h3>Currently</h3>
+      <ul>
+        <li>Teaching Technology, CS &amp; AI Dev<span>The Pine School &middot; Hobe Sound, FL</span></li>
+        <li>Building nickwalther.me<span>GitHub Pages + Google Infrastructure</span></li>
+        <li>Exploring Gemini, Claude &amp; Perplexity<span>AI workflow automation</span></li>
+        <li>Writing JavaScript &amp; Python<span>Education + productivity tools</span></li>
+      </ul>
     </div>
-
-    <footer>
-      &copy; 2026 Nick Walther &mdash; nickwalther.me
-    </footer>
-  </div>
+  </section>
+  <section class="nw-cards">
+    <div class="nw-card"><svg class="nw-card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg><h2>Education</h2><p>Technology, Computer Science &amp; AI Development teacher at The Pine School &mdash; integrating real tools into daily classroom practice.</p></div>
+    <div class="nw-card"><svg class="nw-card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg><h2>Development</h2><p>Scratch for creative coding, LEGO SPIKE Prime for hands-on robotics, and a pragmatic philosophy: use the right tool for the right problem, and always ask why first.</p></div>
+    <div class="nw-card"><svg class="nw-card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><h2>Projects</h2><p>Building a digital space on Google infrastructure with GitHub Pages &mdash; open, version-controlled, and always evolving.</p></div>
+    <div class="nw-card"><svg class="nw-card-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4 4 4 0 0 1-4 4 4 4 0 0 1-4-4 4 4 0 0 1 4-4"/><path d="M12 10v4"/><path d="M8 18a4 4 0 0 1 8 0"/><path d="M3 7c1.5-1 3.5-1 5 0M16 7c1.5-1 3.5-1 5 0"/></svg><h2>AI &amp; Automation</h2><p>Leveraging Gemini, Perplexity, and Claude for smarter workflows &mdash; saving time so the human work can be more human.</p></div>
+  </section>
+  <footer>
+    <div class="nw-contact">
+      <p class="nw-contact-label">Open to collaborations &amp; conversations <span>&middot;</span> Hobe Sound, FL</p>
+      <div class="nw-buttons">
+        <a class="nw-btn" href="https://github.com/nwalther02" target="_blank" rel="noopener"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>GitHub</a>
+        <a class="nw-btn" href="mailto:nick@nickwalther.me"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Email</a>
+        <a class="nw-btn" href="tel:4043175228"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.44 2 2 0 0 1 3.6 1.27h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.08 6.08l.91-.91a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>404-317-5228</a>
+      </div>
+      <p class="nw-philosophy">&ldquo;With great power comes great responsibility.&rdquo; &mdash; Spider-Man</p>
+      <p class="nw-footer-copy">&copy; 2026 Nick Walther &mdash; nickwalther.me</p>
+    </div>
+  </footer>
+  <script>
+    (function(){var n=document.getElementById('nw-name-el'),r=document.getElementById('nw-role-el'),f='Nick Walther',roles=['Educator_','Developer_','Technologist_','AI Builder_'],c=document.createElement('span');c.className='nw-cursor';function tN(i){if(i<=f.length){n.textContent=f.slice(0,i);n.appendChild(c);setTimeout(function(){tN(i+1);},i===0?400:75);}else{setTimeout(function(){tR(0,0);},500);}}function tR(ri,ci){var role=roles[ri%roles.length];if(ci<=role.length){r.textContent='> '+role.slice(0,ci);setTimeout(function(){tR(ri,ci+1);},80);}else{setTimeout(function(){eR(ri,role.length);},1800);}}function eR(ri,ci){var role=roles[ri%roles.length];if(ci>=0){r.textContent='> '+role.slice(0,ci);setTimeout(function(){eR(ri,ci-1);},45);}else{setTimeout(function(){tR(ri+1,0);},300);}}tN(0);})();
+    var cards=document.querySelectorAll('.nw-card'),obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var c=e.target;setTimeout(function(){c.classList.add('revealed');},(parseInt(c.dataset.cardIndex)||0)*80);obs.unobserve(c);}});},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+    cards.forEach(function(c,i){c.dataset.cardIndex=i;obs.observe(c);});
+    cards.forEach(function(card){card.addEventListener('mousemove',function(e){var r=card.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-0.5,y=(e.clientY-r.top)/r.height-0.5,l=6+Math.abs(x)*4+Math.abs(y)*4;card.style.transition='transform 0.08s ease,border-color 0.3s ease,box-shadow 0.4s ease,background 0.3s ease';card.style.transform='perspective(1000px) rotateX('+(-y*10)+'deg) rotateY('+(x*10)+'deg) translateY(-'+l+'px) scale(1.01)';});card.addEventListener('mouseleave',function(){card.style.transition='transform 0.7s cubic-bezier(0.34,1.3,0.64,1),border-color 0.3s ease,box-shadow 0.5s ease,background 0.3s ease';card.style.transform='perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px) scale(1)';});card.addEventListener('mousedown',function(){card.style.transition='transform 0.1s ease';card.style.transform=card.style.transform.replace(/scale\([^)]+\)/,'scale(0.985)');});card.addEventListener('mouseup',function(){card.style.transition='transform 0.3s cubic-bezier(0.34,1.56,0.64,1)';card.style.transform=card.style.transform.replace(/scale\([^)]+\)/,'scale(1.01)');});});
+  </script>
 </body>
 </html>
