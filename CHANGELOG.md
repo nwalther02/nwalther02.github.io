@@ -1,0 +1,65 @@
+# Changelog
+
+## [Unreleased] — 2026-03-20
+
+### Currently Section — Now Playing Cards Redesign
+
+The Currently section has been redesigned from a plain list into a 2×2 grid of interactive Now Playing cards, inspired by the Spotify and Apple Music widget aesthetic.
+
+#### What changed
+
+**Resting state**
+- Dim green dot in the top-left corner
+- Title and subtitle at reduced opacity
+- Progress bar faded
+
+**On hover** (all transitions unified)
+- Dot brightens with a green glow
+- NOW PLAYING types out letter by letter (440ms for the full 11-character phrase at 40ms/char)
+- Title lifts to full white
+- Subtitle lifts to full brightness and begins a seamless infinite marquee
+- A white scrubber dot appears on the progress bar at the playhead position
+- Card lifts with `translateY(-3px)`, green border glow, and a green top-edge accent line
+
+**On mouse-leave**
+- Everything resets instantly: typewriter clears, dot dims, text returns to resting opacity, marquee pauses
+
+#### Removed
+- SVG icon squares / emoji-style boxes that previously sat on the left of each list item
+- Old list styles: `.nw-bio-currently li`, `.nw-bio-currently li::before`, `.nw-li-label`, `.nw-li-meta`
+
+#### New classes added
+
+| Class | Purpose |
+|---|---|
+| `nw-np-card` | Card shell — replaces `li` styles |
+| `nw-np-header` | Row containing dot + typewriter |
+| `nw-np-dot` | Small green indicator dot |
+| `nw-np-typewriter` | NOW PLAYING typewriter target span |
+| `nw-np-title` | Bold activity title |
+| `nw-np-sub` | Clipping container for subtitle marquee |
+| `nw-np-track` | Animating inner track (holds two text copies) |
+| `nw-np-copy` | One copy of the subtitle text |
+| `nw-np-sep` | Separator between copies |
+| `nw-np-progress` | Progress bar wrapper |
+| `nw-np-bar` | Track background of the progress bar |
+| `nw-np-fill` | Green filled portion of the progress bar |
+| `nw-np-scrubber` | White dot at the playhead position |
+
+#### New CSS custom property
+
+| Property | Set by | Used by |
+|---|---|---|
+| `--loop-w` | JavaScript at runtime (per card) | `@keyframes nwLoop` marquee translate distance |
+
+#### Current card content
+
+| Title | Subtitle | Fill |
+|---|---|---|
+| Teaching Robotics, CS & AI Dev | The Pine School · Hobe Sound, FL | 20% |
+| Teaching How To Operate | Windows 11 · MacOS · ChromeOS | 38% |
+| Exploring ChatGPT, Gemini, Claude & Perplexity | AI Tools for Students and Teachers | 56% |
+| Writing JavaScript & Python | Education Technology | 74% |
+
+#### Files changed
+- `index.html` — HTML, CSS, and JS all embedded
