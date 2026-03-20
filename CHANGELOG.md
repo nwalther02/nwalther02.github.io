@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] — 2026-03-20
+## v1.0.0 — 2026-03-20
 
 ### Currently Section — Now Playing Cards Redesign
 
@@ -60,6 +60,11 @@ The Currently section has been redesigned from a plain list into a 2×2 grid of 
 | Teaching How To Operate | Windows 11 · MacOS · ChromeOS | 38% |
 | Exploring ChatGPT, Gemini, Claude & Perplexity | AI Tools for Students and Teachers | 56% |
 | Writing JavaScript & Python | Education Technology | 74% |
+
+#### Final polish
+
+- Removed pipe character from page title for cleaner browser tab display
+- Changed scroll-snap behavior from `mandatory` to `proximity` for smoother, more natural scrolling
 
 #### Files changed
 - `index.html` — HTML, CSS, and JS all embedded
