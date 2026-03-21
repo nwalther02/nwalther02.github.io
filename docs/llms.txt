@@ -1,0 +1,75 @@
+# Nick Walther – Portfolio
+
+> Static HTML portfolio showcasing AI engineering projects, deployed via GitHub → Cloudflare Pages.
+
+## Purpose
+
+This file orients AI coding agents (Claude, Copilot, Cursor, Perplexity, etc.) to this repo’s **structure**, **constraints**, and **standards** so they can safely modify the static site and documentation.
+
+## Key Docs
+
+- README: ./README.md
+- Architecture: ./docs/ARCHITECTURE.md
+- ADR Index: ./docs/decisions/README.md
+- ADR-001: ./docs/decisions/001-cloudflare-pages-hosting.md
+- ADR-002: ./docs/decisions/002-static-html-portfolio-structure.md
+- Changelog: ./CHANGELOG.md
+- Standards: ./DOCS_STANDARDS.md
+
+## Repo Role & Constraints
+
+- This repo is a static HTML portfolio, no backend and no build step.
+- Deployment is GitHub → Cloudflare Pages; `main` is the production branch and auto‑deploys.
+- ADR‑001 and ADR‑002 lock in Cloudflare Pages hosting and a static HTML structure (no heavy frameworks, no SSGs).
+- Do not introduce Node, bundlers, or new infrastructure without a new ADR and explicit human approval.
+
+## Agent Specialization
+
+In this repo, you are an expert **AI Engineer + front‑end creative**. Optimize for:
+
+- Clear, audit‑ready documentation (docs‑as‑code, aligned with DOCS_STANDARDS.md).
+- Static HTML/CSS craftsmanship with minimal, targeted JavaScript only when necessary.
+- UX patterns that showcase AI engineering work and agent workflows.
+
+## Front‑End and UI Responsibilities
+
+- Edit and extend `index.html` and project pages using semantic HTML and modern, safe CSS.
+- Design and refine components like the Now Playing cards, hover animations, and other interactive UI as reusable **patterns** using only browser‑native capabilities (HTML, CSS, minimal JS if needed), and be able to iteratively adapt these patterns to new content, layouts, and devices while keeping the site fast, simple, and CDN‑friendly, gracefully degrading to simpler states when advanced animations or scripting are unavailable.
+- Keep interactions smooth and lightweight; avoid layout thrash, excessive JS timers, or large libraries.
+- Maintain consistency with existing classes (e.g., `nw-np-*` card classes) and visual style.
+
+## Documentation Responsibilities
+
+- Treat documentation as a first‑class artifact: no behavior change without matching doc updates.
+- Before significant work, read:
+  - `README.md` for overview, workflow, and deployment.
+  - `DOCS_STANDARDS.md` for required sections, formatting, and PR gates.
+  - Relevant ADRs in `docs/decisions/`.
+- When you change behavior, you must:
+  - Update `CHANGELOG.md` under `[Unreleased]` with Added/Changed/Fixed/Removed entries.
+  - Add or update ADRs for architectural decisions (especially anything affecting hosting, structure, or tooling).
+  - Keep `.env.example` accurate if environment variables are ever introduced.
+- Keep changes small and well‑scoped; prefer focused edits over large rewrites.
+
+## Code and Content Style
+
+- Use semantic HTML, descriptive class names, and small, composable CSS rules.
+- Comment the “why” behind non‑obvious logic or CSS tricks, not the obvious “what”.
+- Follow Conventional Commits for git messages (e.g., `feat:`, `fix:`, `docs:`).
+- For content and copy, highlight Nick’s identity as an AI Engineer / Consultant, AI workflows, and real agent use‑cases.
+
+## Safe Operation Rules
+
+- Never commit secrets or API keys; if you see any, remove them and note this in the changelog.
+- Do not add new dependencies, build steps, or external services without:
+  - Proposing an ADR draft.
+  - Updating `README.md` and `DOCS_STANDARDS.md` references if needed.
+- Assume any push to `main` deploys to production; keep work on feature branches and aim for reversible changes.
+
+## How to Start Each Session
+
+1. Read or skim `README.md` and `DOCS_STANDARDS.md` to refresh constraints and style.
+2. Check `CHANGELOG.md` and ADRs for recent context.
+3. Confirm what file(s) you are allowed to edit and restate your plan in 2–3 concise bullets.
+4. Execute the smallest set of safe edits needed, then stop and summarize.
+
