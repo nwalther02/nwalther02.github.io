@@ -1,5 +1,40 @@
 # Changelog
 
+## v1.1.0 — 2026-03-22 · Milestone 2: Second Code Push (Refinement)
+
+This milestone marks the second code push following the initial Now Playing cards launch. It captures the polish pass applied after the v1.0.0 release and locks in the current site state as a stable, reviewed baseline.
+
+### Refined
+
+**Hero section**
+- Typewriter now cycles through four role labels: `AI Engineer_`, `Software Developer_`, `Technology Educator_`, `Curriculum Designer_`
+- Role erase/retype loop runs indefinitely with smooth erase at 45ms/char and type at 80ms/char
+
+**Project cards (`.nw-card`)**
+- Staggered reveal on scroll via `IntersectionObserver` (80ms delay per card index)
+- 3-D tilt on `mousemove` using `perspective(1000px) rotateX/Y` clamped to ±10°
+- `mousedown`/`mouseup` press-in effect (`scale(0.985)` → `scale(1.01)`)
+- Cards enter from `translateY(28px)` opacity-0 and land at natural position
+
+**Now Playing cards (`.nw-np-card`)**
+- `--loop-w` CSS custom property now set via `offsetWidth` measurement at page-load for pixel-perfect marquee alignment
+- Typewriter phrase (`NOW PLAYING`, 40 ms/char) and marquee correctly reset on mouse-leave with no residual animation state
+
+**Contact / footer**
+- Footer copy, philosophy quote, and open-to-collaborations label present and styled
+
+### Added
+
+- `docs/llms.txt` — agent orientation file describing repo purpose, constraints, doc standards, and safe operation rules for AI coding agents (Claude, Copilot, Cursor, Perplexity)
+- `CHANGELOG.md` — this file; all future behavior changes must be logged here before merging
+
+### Files changed
+- `index.html` — hero typewriter, card interactions, and NP-card JS all reviewed and confirmed stable
+- `docs/llms.txt` — created as v1.1.0 documentation artifact
+- `CHANGELOG.md` — milestone 2 entry added
+
+---
+
 ## v1.0.0 — 2026-03-20
 
 ### Currently Section — Now Playing Cards Redesign
