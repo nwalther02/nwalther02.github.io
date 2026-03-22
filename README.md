@@ -51,13 +51,13 @@ nwalther02.github.io/
 
 ### Local Preview
 
-Open `index.html` directly in a browser, or use any static file server:
+Open `index.html` directly in a browser, or use any static file server. Per the repo architecture docs, Node/npm is **not** part of the required dev workflow; the Node-based option below is purely optional for contributors who already have it installed.
 
 ```bash
-# Python
+# Python (primary supported option)
 python -m http.server 8080
 
-# Node (npx, no install)
+# Optional: if you already use Node locally (not required or expected by this repo)
 npx serve .
 ```
 
