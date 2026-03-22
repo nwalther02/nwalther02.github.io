@@ -30,12 +30,17 @@ The primary constraints were:
 
 ## Decision
 
-Use **plain, hand-written HTML/CSS/JavaScript** with all assets embedded directly in each HTML file.
+Use **plain, hand-written HTML/CSS/JavaScript** with all site CSS and JS embedded directly in each HTML file.
 
-- `index.html` contains all CSS in a `<style>` block and all JS in a `<script>` block.
+- `index.html` contains all site CSS in a `<style>` block and all site JS in a `<script>` block.
 - Project pages in `projects/` follow the same self-contained convention.
 - No CSS frameworks, no JavaScript frameworks, no package managers, no build tools.
 - All custom classes use the `nw-` prefix for namespacing.
+
+**Intentional external dependencies** (not subject to the "no external resources" constraint):
+
+- **Google Fonts** (`fonts.googleapis.com`) — loads the `IBM Plex Mono` and `Inter` typefaces used throughout the design.
+- **Google Tag Manager / Analytics** (`googletagmanager.com`) — a single async analytics snippet; analytics-only, no effect on rendering.
 
 ---
 

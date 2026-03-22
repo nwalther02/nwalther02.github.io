@@ -57,17 +57,30 @@ All CSS and JavaScript are embedded directly in `index.html` inside `<style>` an
 - Makes the entire page self-contained and inspectable.
 - Avoids a build step or asset pipeline.
 
+**Exceptions:** Two external services are loaded at the top of `<head>`:
+
+- **Google Fonts** — loads `IBM Plex Mono` and `Inter` typefaces via `fonts.googleapis.com`. Removing these would fall back to system fonts and change the visual design.
+- **Google Tag Manager / Analytics** — a single async `<script>` tag that loads the GA4 tracking snippet. This is analytics-only and has no effect on page rendering.
+
+These are the only external dependencies; all other CSS and JS remain inline.
+
 ### CSS Custom Properties
 
 Global design tokens are defined in `:root` at the top of the `<style>` block:
 
 ```css
 :root {
-  --primary: #00ff9d;   /* Green accent — brand color */
-  --accent: #7df9ff;    /* Cyan accent */
-  --text-muted: #888;
-  --font-mono: 'JetBrains Mono', monospace;
-  --font-sans: 'Inter', sans-serif;
+  --bg: #111010;
+  --bg-card: #1E1C1A;
+  --primary: #00E639;                    /* Green accent — brand color */
+  --accent: #22d3ee;                     /* Cyan accent */
+  --text: #D6D0C8;
+  --text-muted: #7A756D;
+  --text-dim: rgba(214, 208, 200, 0.35);
+  --border: rgba(0, 230, 57, 0.13);
+  --border-hover: rgba(0, 230, 57, 0.55);
+  --font-mono: 'IBM Plex Mono', monospace;
+  --font-sans: 'Inter', system-ui, sans-serif;
 }
 ```
 
@@ -89,6 +102,8 @@ Minimal vanilla JS, embedded in a single `<script>` block at the bottom of `inde
 - **Typewriter effect** — "NOW PLAYING" text on Now Playing card hover.
 - **Marquee width calculation** — Sets `--loop-w` CSS custom property per card for seamless subtitle scroll.
 - **Role rotator** — Cycles through role titles in the hero section.
+
+**Exception:** A Google Tag Manager/Analytics snippet (`gtag.js`) is loaded via an external `<script async>` tag in `<head>`. This is the only external JS dependency; it is analytics-only and does not affect page behaviour.
 
 ---
 
