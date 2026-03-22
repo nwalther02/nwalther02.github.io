@@ -47,7 +47,7 @@ Use **plain, hand-written HTML/CSS/JavaScript** with all assets embedded directl
 - No dependency chain to audit, update, or break.
 - Any text editor or AI agent can edit the site safely with no environment setup.
 - The site is fully inspectable: view source = the full source.
-- Extremely fast — a single HTML file loads in one request with no render-blocking resources.
+- Extremely fast — the core page is a single HTML file with inlined CSS/JS and no heavy or critical render-blocking dependencies.
 
 **Trade-offs:**
 
