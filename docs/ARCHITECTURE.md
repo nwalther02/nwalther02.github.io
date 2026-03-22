@@ -1,6 +1,6 @@
 # Architecture
 
-> **Last updated:** 2026-03-22  
+> **Last updated:** 2026-03-22
 > **Status:** Current
 
 This document describes the structure, deployment model, and design constraints of the portfolio site.
