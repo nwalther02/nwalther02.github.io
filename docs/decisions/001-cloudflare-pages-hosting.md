@@ -1,6 +1,6 @@
 # ADR-001: Cloudflare Pages Hosting
 
-**Status:** Accepted  
+**Status:** Accepted
 **Date:** 2026-03-20
 
 ---
