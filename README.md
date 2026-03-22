@@ -1,6 +1,7 @@
 # Nick Walther – Portfolio
 
-> Static HTML portfolio showcasing AI engineering projects and educational technology work.  
+> Static HTML portfolio showcasing AI engineering projects and educational technology work.
+>
 > Live at **[nwalther02.github.io](https://nwalther02.github.io)** via GitHub → Cloudflare Pages.
 
 ---
