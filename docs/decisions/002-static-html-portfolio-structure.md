@@ -1,6 +1,6 @@
 # ADR-002: Static HTML Portfolio Structure
 
-**Status:** Accepted  
+**Status:** Accepted<br>
 **Date:** 2026-03-20
 
 ---
