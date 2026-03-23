@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- Add `README.md` for project overview, file structure, tech stack, workflow, and docs index.
+- Add `DOCS_STANDARDS.md` documenting formatting rules, required files table, changelog format, ADR format, Markdown style guide, PR gates checklist, and review cadence.
+- Add `docs/ARCHITECTURE.md` documenting site architecture, file layout, hosting model, CSS custom properties, component class conventions, JS responsibilities, and locked constraints.
+- Add `docs/decisions/README.md` as the ADR index with links to ADR-001 and ADR-002.
+- Add `docs/decisions/001-cloudflare-pages-hosting.md` as ADR-001 (Accepted): rationale for choosing Cloudflare Pages.
+- Add `docs/decisions/002-static-html-portfolio-structure.md` as ADR-002 (Accepted): rationale for plain static HTML with no framework or build step.
+- Add `.github/agents/docs-agent.md` describing the documentation-specialist Copilot agent; handles regular doc reviews, changelog maintenance, ADR authoring, and doc-only PRs.
+
+---
+
 ## v1.1.0 — 2026-03-22 · Milestone 2: Second Code Push (Refinement)
 
 This milestone marks the second code push following the initial Now Playing cards launch. It captures the polish pass applied after the v1.0.0 release and locks in the current site state as a stable, reviewed baseline.
