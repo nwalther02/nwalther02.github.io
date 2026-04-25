@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b0f1a">
+<title>Workout Logger</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0f1a;--surf1:#111827;--surf2:#1a2235;--surf3:#212d42;--surf4:#2a3750;
+  --volt:#d4f500;--volt-dim:#b8d800;--volt-subtle:rgba(212,245,0,.08);--volt-border:rgba(212,245,0,.22);
+  --text:#eef2ff;--text2:#8b9ab8;--text3:#4d5f7a;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.14);
+  --red:#f05050;--red-bg:rgba(240,80,80,.1);
+  --r:10px;--r2:14px;--r3:18px;
+  --ff:'Barlow',system-ui,sans-serif;
+  --ffc:'Barlow Condensed',system-ui,sans-serif;
+  --tr:all .15s cubic-bezier(.4,0,.2,1);
+  --safe-b:env(safe-area-inset-bottom,0px);
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--ff);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+#app{max-width:560px;margin:0 auto;padding-bottom:calc(64px + var(--safe-b));min-height:100vh}
+input,textarea,select{background:var(--surf3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r);padding:11px 13px;font-size:16px;font-family:var(--ff);width:100%;outline:none;transition:var(--tr);-webkit-appearance:none;}
+input:focus,textarea:focus{border-color:var(--volt);background:var(--surf4);box-shadow:0 0 0 3px var(--volt-subtle)}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+input[type=checkbox]{display:none}
+.chk{width:26px;height:26px;border-radius:7px;border:2px solid var(--border2);background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:var(--tr);touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.chk.on{background:var(--volt);border-color:var(--volt)}
+.chk.on::after{content:'';display:block;width:8px;height:5px;border-left:2.5px solid #0b0f1a;border-bottom:2.5px solid #0b0f1a;transform:rotate(-45deg) translateY(-1px)}
+button{cursor:pointer;font-family:var(--ff);font-size:13px;font-weight:600;border:1px solid var(--border2);background:var(--surf2);color:var(--text2);border-radius:var(--r);padding:10px 16px;min-height:44px;transition:var(--tr);touch-action:manipulation;letter-spacing:.02em;-webkit-tap-highlight-color:transparent}
+button:hover{background:var(--surf3);color:var(--text)}
+button:active{transform:scale(.96)}
+.btn-primary{background:var(--volt);color:#0b0f1a;border-color:var(--volt);font-weight:700;letter-spacing:.05em}
+.btn-primary:hover{background:var(--volt-dim);border-color:var(--volt-dim);color:#0b0f1a}
+.btn-outline{background:transparent;border-color:var(--border2);color:var(--text2)}
+.btn-outline:hover{border-color:var(--volt-border);color:var(--volt);background:var(--volt-subtle)}
+.btn-ghost{background:transparent;border:none;color:var(--text3);padding:8px;min-height:36px}
+.btn-ghost:hover{color:var(--text2);background:var(--surf2)}
+.btn-danger{background:transparent;border:none;color:var(--red)}
+.btn-danger:hover{background:var(--red-bg)}
+.btn-sm{padding:8px 12px;font-size:12px;min-height:38px;border-radius:8px}
+.vlabel{display:inline-flex;align-items:center;background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;color:var(--volt);letter-spacing:.08em;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;background:var(--surf3);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--text2)}
+.label{font-family:var(--ffc);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+.sticky-header{background:var(--surf1);border-bottom:1px solid var(--border);padding:14px 16px;position:sticky;top:0;z-index:20}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ─────────────────────────────────────────────
+//  PROGRAM TEMPLATES
+//  Edit this array to add/modify training days.
+//  Each exercise: name, targetSets, targetRepRange, notes, restSeconds
+// ─────────────────────────────────────────────
+const PROGRAMS = [
+  {
+    id:'upper-a',
+    label:'Upper A',
+    tag:'Push Focus',
+    color:'#d4f500',
+    description:'Horizontal push/pull emphasis. 3–4 sets per movement.',
+    exercises:[
+      {name:'Barbell Bench Press',targetSets:'4',targetRepRange:'4–6',notes:'Pause 1s at chest. +2.5–5 lb if top of range hit.',restSeconds:180},
+      {name:'Barbell Row',targetSets:'4',targetRepRange:'6–8',notes:'Double overhand, chest to bar. Control the eccentric.',restSeconds:180},
+      {name:'Overhead Press',targetSets:'3',targetRepRange:'6–8',notes:'Full lockout. Brace hard.',restSeconds:150},
+      {name:'Lat Pulldown',targetSets:'3',targetRepRange:'8–10',notes:'Full stretch at top, drive elbows to hips.',restSeconds:120},
+      {name:'DB Lateral Raise',targetSets:'3',targetRepRange:'12–15',notes:'Slight forward lean, lead with elbows.',restSeconds:60},
+      {name:'Tricep Pushdown',targetSets:'3',targetRepRange:'12–15',notes:'Full extension, squeeze at bottom.',restSeconds:60},
+    ]
+  },
+  {
+    id:'upper-b',
+    label:'Upper B',
+    tag:'Pull Focus',
+    color:'#d4f500',
+    description:'Vertical pull/push emphasis. Higher rep accessories.',
+    exercises:[
+      {name:'Pull-up / Weighted Pull-up',targetSets:'4',targetRepRange:'5–8',notes:'Full dead hang. Add weight when top of range is clean.',restSeconds:180},
+      {name:'Incline DB Press',targetSets:'4',targetRepRange:'8–10',notes:'30–45° incline. Control descent.',restSeconds:150},
+      {name:'Cable Row',targetSets:'3',targetRepRange:'10–12',notes:'Neutral grip. Full stretch, full contraction.',restSeconds:120},
+      {name:'DB Shoulder Press',targetSets:'3',targetRepRange:'8–10',notes:'Seated or standing. Full ROM.',restSeconds:120},
+      {name:'Face Pull',targetSets:'3',targetRepRange:'15–20',notes:'External rotation at end range. Light weight, high quality.',restSeconds:60},
+      {name:'DB Curl',targetSets:'3',targetRepRange:'10–12',notes:'Supinate at top. No momentum.',restSeconds:60},
+    ]
+  },
+  {
+    id:'lower-a',
+    label:'Lower A',
+    tag:'Squat Focus',
+    color:'#d4f500',
+    description:'Quad-dominant. Heavy squat pattern leads.',
+    exercises:[
+      {name:'Barbell Back Squat',targetSets:'4',targetRepRange:'4–6',notes:'Full depth, brace hard. +2.5–5 lb if top of range hit.',restSeconds:180},
+      {name:'Leg Press',targetSets:'3',targetRepRange:'8–10',notes:'Feet shoulder-width. Full ROM, do not lock out hard.',restSeconds:120},
+      {name:'DB Bulgarian Split Squat',targetSets:'3',targetRepRange:'10–12',notes:'Rear foot on bench. DBs in each hand.',restSeconds:90},
+      {name:'Leg Curl (Machine)',targetSets:'3',targetRepRange:'10–12',notes:'Full stretch, curl to full contraction.',restSeconds:90},
+      {name:'Standing Calf Raise',targetSets:'4',targetRepRange:'15–20',notes:'2-sec eccentric. Full ROM. 1 RIR.',restSeconds:60},
+    ]
+  },
+  {
+    id:'lower-b',
+    label:'Lower B',
+    tag:'Hinge Focus',
+    color:'#d4f500',
+    description:'Hip-dominant. RDL leads, split squat accessory.',
+    exercises:[
+      {name:'Barbell Back Squat',targetSets:'3',targetRepRange:'6–8',notes:'Full depth, brace hard. +2.5–5 lb if top of range hit. 2 RIR.',restSeconds:180},
+      {name:'Romanian Deadlift (Barbell)',targetSets:'3',targetRepRange:'8–10',notes:'Hinge deep, stretch hamstrings, neutral spine. 2 RIR.',restSeconds:90},
+      {name:'DB Bulgarian Split Squat',targetSets:'3',targetRepRange:'10–12/leg',notes:'Rear foot on bench. DBs 25–35 lb. 2 RIR.',restSeconds:90},
+      {name:'DB Walking Lunge',targetSets:'2',targetRepRange:'12/leg',notes:'Upright torso, full step. DBs 20–30 lb. 2 RIR.',restSeconds:60},
+      {name:'Standing Calf Raise',targetSets:'3',targetRepRange:'15–20',notes:'Full ROM, 2-sec eccentric. 1 RIR.',restSeconds:60},
+    ]
+  },
+];
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+const LS_SESS  = 'wl3_session';
+const LS_HIST  = 'wl3_history';
+const LS_VIEW  = 'wl3_view';
+
+let STATE = {
+  view: 'picker',       // picker | session | history | preview
+  session: null,        // active session object
+  history: [],          // array of completed sessions
+  previewIdx: null,
+  timer: { seconds:0, running:false, interval:null },
+};
+
+// ─────────────────────────────────────────────
+//  PERSISTENCE
+// ─────────────────────────────────────────────
+function persist() {
+  try {
+    localStorage.setItem(LS_SESS, JSON.stringify({
+      view: STATE.view,
+      session: STATE.session,
+    }));
+    localStorage.setItem(LS_HIST, JSON.stringify(STATE.history));
+  } catch(e) {}
+}
+
+function hydrate() {
+  try {
+    const raw = localStorage.getItem(LS_SESS);
+    const hist = localStorage.getItem(LS_HIST);
+    if (hist) STATE.history = JSON.parse(hist) || [];
+    if (raw) {
+      const d = JSON.parse(raw);
+      // Only restore an active in-progress session
+      if (d.session && d.session.startedAt && !d.session.endedAt) {
+        STATE.session = d.session;
+        STATE.view = 'session';
+        return;
+      }
+    }
+  } catch(e) {}
+  STATE.view = 'picker';
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+const uid = () => Math.random().toString(36).slice(2,9);
+const today = () => new Date().toISOString().slice(0,10);
+const vibrate = (p=50) => { try { navigator.vibrate && navigator.vibrate(p); } catch(e){} };
+const $ = id => document.getElementById(id);
+
+function makeSet(n, prevWeight='', prevReps='') {
+  return { id:uid(), setNumber:n, weight:prevWeight, reps:prevReps, rpe:'', completed:false, notes:'' };
+}
+
+function sessionFromProgram(prog) {
+  return {
+    id: uid(),
+    programId: prog.id,
+    title: prog.label,
+    tag: prog.tag,
+    date: today(),
+    notes: '',
+    startedAt: null,
+    endedAt: null,
+    exercises: prog.exercises.map(ex => ({
+      id: uid(),
+      name: ex.name,
+      targetSets: ex.targetSets,
+      targetRepRange: ex.targetRepRange,
+      notes: ex.notes,
+      restSeconds: ex.restSeconds || 90,
+      sets: Array.from({length: parseInt(ex.targetSets)||3}, (_,i) => makeSet(i+1)),
+    }))
+  };
+}
+
+function totalCompletedSets(sess) {
+  if (!sess) return 0;
+  return sess.exercises.reduce((a,ex) => a + ex.sets.filter(s=>s.completed).length, 0);
+}
+
+function saveToHistory(sess) {
+  if (!sess) return;
+  const entry = { ...sess, savedAt: new Date().toISOString() };
+  // Replace existing entry with same id, or prepend
+  const idx = STATE.history.findIndex(h => h.id === sess.id);
+  if (idx >= 0) STATE.history[idx] = entry;
+  else STATE.history.unshift(entry);
+  if (STATE.history.length > 50) STATE.history = STATE.history.slice(0,50);
+}
+
+// ─────────────────────────────────────────────
+//  TIMER
+// ─────────────────────────────────────────────
+function startTimer(sec) {
+  if (STATE.timer.interval) clearInterval(STATE.timer.interval);
+  STATE.timer.seconds = sec;
+  STATE.timer.running = true;
+  tickTimer();
+  STATE.timer.interval = setInterval(tickTimer, 1000);
+}
+function resetTimer() {
+  if (STATE.timer.interval) clearInterval(STATE.timer.interval);
+  STATE.timer.seconds = 0;
+  STATE.timer.running = false;
+  renderTimerEl();
+}
+function tickTimer() {
+  if (STATE.timer.seconds > 0) {
+    STATE.timer.seconds--;
+    renderTimerEl();
+  } else {
+    clearInterval(STATE.timer.interval);
+    STATE.timer.running = false;
+    vibrate([80,40,80]);
+    renderTimerEl();
+  }
+}
+function renderTimerEl() {
+  const el = $('tdisplay'); if(!el) return;
+  const m = Math.floor(STATE.timer.seconds/60);
+  const s = STATE.timer.seconds % 60;
+  el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  const done = !STATE.timer.running && STATE.timer.seconds===0;
+  el.style.color = done ? 'var(--text3)' : STATE.timer.seconds<=10 ? 'var(--red)' : 'var(--volt)';
+  const bar = $('tbar');
+  if (bar) bar.style.width = done ? '0' : '100%';
+}
+
+// ─────────────────────────────────────────────
+//  EXPORT CSV
+// ─────────────────────────────────────────────
+function exportCSV(sess) {
+  if (!sess) return;
+  const esc = v => `"${(v||'').toString().replace(/"/g,'""')}"`;
+  const rows = [['Session','Date','Exercise','Set','Weight','Reps','RPE','Completed','Notes']];
+  sess.exercises.forEach(ex => {
+    ex.sets.forEach(set => {
+      rows.push([esc(sess.title), sess.date, esc(ex.name), set.setNumber, set.weight||'', set.reps||'', set.rpe||'', set.completed?'yes':'no', esc(set.notes)]);
+    });
+  });
+  const blob = new Blob([rows.map(r=>r.join(',')).join('\n')], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `workout_${sess.date}_${sess.title.replace(/\s+/g,'-').toLowerCase()}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ─────────────────────────────────────────────
+//  RENDER: PROGRAM PICKER
+// ─────────────────────────────────────────────
+function rPicker() {
+  const hasActive = STATE.session && STATE.session.startedAt && !STATE.session.endedAt;
+  return `
+<div class="sticky-header">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div class="label" style="margin-bottom:3px">Workout Logger</div>
+      <div style="font-family:var(--ffc);font-size:22px;font-weight:700;color:var(--text)">Select Program</div>
+    </div>
+    <button class="btn-sm btn-outline" onclick="goHistory()">History</button>
+  </div>
+  ${hasActive ? `
+  <div style="margin-top:12px;background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:var(--r2);padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:11px;color:var(--volt);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">Session in progress</div>
+      <div style="font-size:14px;font-weight:600">${STATE.session.title}</div>
+    </div>
+    <button class="btn-sm btn-primary" onclick="STATE.view='session';render()">Resume →</button>
+  </div>` : ''}
+</div>
+<div style="padding:16px">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    ${PROGRAMS.map(p => `
+    <div onclick="loadProgram('${p.id}')" style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r3);padding:16px;cursor:pointer;transition:var(--tr);position:relative;overflow:hidden" onmouseenter="this.style.borderColor='var(--volt-border)';this.style.background='var(--surf3)'" onmouseleave="this.style.borderColor='var(--border)';this.style.background='var(--surf2)'" ontouchstart="this.style.borderColor='var(--volt-border)';this.style.background='var(--surf3)'" ontouchend="this.style.borderColor='var(--border)';this.style.background='var(--surf2)'">
+      <div style="font-family:var(--ffc);font-size:28px;font-weight:700;color:var(--volt);line-height:1;margin-bottom:4px">${p.label}</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">${p.tag}</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:10px">${p.description}</div>
+      <div style="font-size:11px;color:var(--text3)">${p.exercises.length} exercises</div>
+    </div>`).join('')}
+  </div>
+  <button class="btn-outline btn-sm" style="width:100%;margin-top:12px" onclick="loadBlank()">+ Start blank session</button>
+</div>`;
+}
+
+function loadProgram(id) {
+  const prog = PROGRAMS.find(p => p.id === id);
+  if (!prog) return;
+  // If active session exists, ask before replacing
+  if (STATE.session && STATE.session.startedAt && !STATE.session.endedAt) {
+    if (!confirm('You have an active session. Start a new one? (Current session will be saved to history.)')) return;
+    saveToHistory(STATE.session);
+  }
+  STATE.session = sessionFromProgram(prog);
+  STATE.view = 'session';
+  persist();
+  render();
+}
+
+function loadBlank() {
+  if (STATE.session && STATE.session.startedAt && !STATE.session.endedAt) {
+    if (!confirm('You have an active session. Start a new one?')) return;
+    saveToHistory(STATE.session);
+  }
+  STATE.session = {
+    id:uid(), programId:null, title:'', tag:'', date:today(),
+    notes:'', startedAt:null, endedAt:null, exercises:[]
+  };
+  STATE.view = 'session';
+  persist();
+  render();
+}
+
+// ─────────────────────────────────────────────
+//  RENDER: SESSION
+// ─────────────────────────────────────────────
+function rSession() {
+  const sess = STATE.session;
+  if (!sess) { STATE.view='picker'; return rPicker(); }
+  const active = !!sess.startedAt && !sess.endedAt;
+  const done = !!sess.endedAt;
+  const totalSets = sess.exercises.reduce((a,e)=>a+e.sets.length,0);
+  const completedSets = totalCompletedSets(sess);
+
+  return `
+<div class="sticky-header">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <button class="btn-ghost btn-sm" onclick="STATE.view='picker';render()" style="padding:6px 10px">← Programs</button>
+    <div style="display:flex;gap:6px">
+      <button class="btn-sm btn-outline" onclick="exportCSV(STATE.session)">Export CSV</button>
+      <button class="btn-sm btn-outline" onclick="goHistory()">History</button>
+    </div>
+  </div>
+  <input placeholder="Session title" value="${sess.title||''}" style="font-size:20px;font-weight:700;background:transparent;border:none;border-bottom:1px solid var(--border2);border-radius:0;padding:5px 0;letter-spacing:.01em;margin-bottom:10px" oninput="STATE.session.title=this.value;persist()">
+  <div style="display:flex;gap:8px;margin-bottom:10px">
+    <input type="date" value="${sess.date||today()}" style="font-size:13px;flex:0 0 auto;width:152px;padding:8px 10px" oninput="STATE.session.date=this.value;persist()">
+    <input placeholder="Notes (optional)" value="${sess.notes||''}" style="font-size:13px;padding:8px 10px" oninput="STATE.session.notes=this.value;persist()">
+  </div>
+  ${totalSets>0 ? `
+  <div style="margin-bottom:10px">
+    <div style="height:4px;background:var(--surf4);border-radius:2px;overflow:hidden;margin-bottom:4px">
+      <div style="height:100%;background:var(--volt);width:${Math.round(completedSets/totalSets*100)}%;transition:width .4s"></div>
+    </div>
+    <div style="font-size:11px;color:var(--text3)">${completedSets} of ${totalSets} sets logged</div>
+  </div>` : ''}
+  <div style="display:flex;align-items:center;gap:8px">
+    ${!sess.startedAt ? `<button class="btn-primary btn-sm" style="flex:1" onclick="startSession()">Start Session</button>` :
+      done ? `<span class="vlabel">Complete</span><span style="font-size:12px;color:var(--text2);margin-left:4px">${new Date(sess.startedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} – ${new Date(sess.endedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>` :
+      `<span class="vlabel">Live</span><span style="font-size:12px;color:var(--text2);margin-left:4px">${new Date(sess.startedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>`
+    }
+    ${active ? `<button class="btn-sm btn-danger" style="margin-left:auto;border:1px solid var(--red)" onclick="endSession()">End Session</button>` : ''}
+    ${done ? `<button class="btn-sm btn-outline" style="margin-left:auto" onclick="STATE.view='picker';render()">New Session</button>` : ''}
+  </div>
+</div>
+${rTimerBlock()}
+${sess.exercises.map((ex,i) => rExercise(ex,i)).join('')}
+<div style="padding:14px 16px 0">
+  <button class="btn-primary" style="width:100%;min-height:52px;font-size:15px;letter-spacing:.05em;border-radius:var(--r3)" onclick="addExercise()">+ Add Exercise</button>
+</div>
+<div style="margin:20px 16px 0;padding:14px 16px;background:var(--surf1);border-radius:var(--r2);border:1px solid var(--border)">
+  <div class="label" style="margin-bottom:5px">How to use</div>
+  <div style="font-size:12px;color:var(--text2);line-height:1.7">Log weight + reps → tap checkbox to mark set done → start rest timer → repeat. Tap Export CSV to save your data. Session auto-saves continuously.</div>
+</div>`;
+}
+
+function startSession() {
+  STATE.session.startedAt = new Date().toISOString();
+  persist();
+  render();
+}
+
+function endSession() {
+  if (!confirm('End and save this session?')) return;
+  STATE.session.endedAt = new Date().toISOString();
+  saveToHistory(STATE.session);
+  persist();
+  render();
+}
+
+// ─────────────────────────────────────────────
+//  RENDER: TIMER BLOCK
+// ─────────────────────────────────────────────
+function rTimerBlock() {
+  const m = Math.floor(STATE.timer.seconds/60);
+  const s = STATE.timer.seconds % 60;
+  const str = `${m}:${s.toString().padStart(2,'0')}`;
+  const done = !STATE.timer.running && STATE.timer.seconds===0;
+  return `
+<div style="margin:14px 16px 0;background:var(--surf2);border:1px solid var(--border2);border-radius:var(--r3);padding:16px 18px;overflow:hidden;position:relative">
+  <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--border)">
+    <div id="tbar" style="height:100%;background:var(--volt);width:0;transition:none"></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <span class="label">Rest Timer</span>
+    <span id="tdisplay" style="font-family:var(--ffc);font-size:32px;font-weight:700;letter-spacing:.04em;color:${done?'var(--text3)':'var(--volt)'}">${str}</span>
+  </div>
+  <div style="display:flex;gap:7px">
+    ${[[60,'60s'],[90,'90s'],[120,'2:00'],[180,'3:00']].map(([v,l])=>`<button class="btn-sm btn-outline" style="flex:1;min-width:0" onclick="startTimer(${v})">${l}</button>`).join('')}
+    <button class="btn-sm btn-ghost" onclick="resetTimer()">Reset</button>
+  </div>
+</div>`;
+}
+
+// ─────────────────────────────────────────────
+//  RENDER: EXERCISE CARD
+// ─────────────────────────────────────────────
+function rExercise(ex, idx) {
+  const sess = STATE.session;
+  const doneCount = ex.sets.filter(s=>s.completed).length;
+  const total = ex.sets.length;
+  const allDone = total > 0 && doneCount === total;
+  const exIdx = idx;
+
+  return `
+<div data-exid="${ex.id}" style="margin:12px 16px 0;background:var(--surf1);border:1px solid ${allDone?'var(--volt-border)':'var(--border)'};border-radius:var(--r3);overflow:hidden;transition:border-color .25s">
+  <div style="padding:14px 16px 12px;border-bottom:1px solid ${allDone?'var(--volt-border)':'var(--border)'}">
+    <div style="display:flex;align-items:flex-start;gap:8px">
+      <div style="display:flex;flex-direction:column;gap:2px;padding-top:3px;flex-shrink:0">
+        <button class="btn-ghost btn-sm" style="padding:3px 7px;font-size:10px;min-height:auto" onclick="moveEx(${exIdx},-1)">▲</button>
+        <button class="btn-ghost btn-sm" style="padding:3px 7px;font-size:10px;min-height:auto" onclick="moveEx(${exIdx},1)">▼</button>
+      </div>
+      <div style="flex:1;min-width:0">
+        <input placeholder="Exercise name" value="${ex.name||''}" style="font-size:18px;font-weight:700;background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:4px 0;width:100%;margin-bottom:9px" oninput="STATE.session.exercises[${exIdx}].name=this.value;persist()">
+        <div style="display:flex;gap:7px">
+          <input placeholder="Sets" value="${ex.targetSets||''}" style="font-size:13px;padding:7px 10px;width:65px;flex:none" oninput="STATE.session.exercises[${exIdx}].targetSets=this.value;persist()">
+          <input placeholder="Rep range" value="${ex.targetRepRange||''}" style="font-size:13px;padding:7px 10px;flex:1;min-width:0" oninput="STATE.session.exercises[${exIdx}].targetRepRange=this.value;persist()">
+        </div>
+        ${ex.notes ? `<div style="margin-top:9px;font-size:12px;color:var(--text3);line-height:1.55;padding:8px 11px;background:var(--surf3);border-radius:7px;border-left:2px solid var(--volt-border)">${ex.notes}</div>` : ''}
+      </div>
+      <button class="btn-ghost btn-danger btn-sm" style="padding:6px;min-height:auto;font-size:13px;flex-shrink:0" onclick="removeEx('${ex.id}')">✕</button>
+    </div>
+    ${total > 0 ? `
+    <div style="display:flex;align-items:center;gap:8px;margin-top:11px">
+      <div style="flex:1;height:3px;background:var(--surf4);border-radius:2px;overflow:hidden">
+        <div style="height:100%;background:${allDone?'var(--volt)':'var(--volt-dim)'};width:${Math.round(doneCount/total*100)}%;transition:width .3s"></div>
+      </div>
+      <span style="font-size:11px;color:${allDone?'var(--volt)':'var(--text2)'};font-weight:700">${doneCount}/${total}</span>
+    </div>` : ''}
+  </div>
+  <div style="background:var(--bg)">
+    <div style="display:grid;grid-template-columns:24px 1fr 1fr 50px 30px 26px;gap:4px;padding:7px 14px;border-bottom:1px solid var(--border)">
+      ${['#','Wt','Reps','RPE','',''].map(l=>`<span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)">${l}</span>`).join('')}
+    </div>
+    ${ex.sets.map((set,si) => `
+    <div style="display:grid;grid-template-columns:24px 1fr 1fr 50px 30px 26px;gap:4px;align-items:center;padding:5px 14px;border-bottom:1px solid var(--border);background:${set.completed?'var(--volt-subtle)':'transparent'};transition:background .2s">
+      <span style="font-family:var(--ffc);font-size:13px;font-weight:700;color:${set.completed?'var(--volt)':'var(--text3)'}">${set.setNumber}</span>
+      <input type="text" inputmode="decimal" value="${set.weight||''}" placeholder="lbs" style="font-size:16px;padding:9px 5px;text-align:center;opacity:${set.completed?.6:1}" oninput="STATE.session.exercises[${exIdx}].sets[${si}].weight=this.value;persist()">
+      <input type="text" inputmode="numeric" value="${set.reps||''}" placeholder="reps" style="font-size:16px;padding:9px 5px;text-align:center;opacity:${set.completed?.6:1}" oninput="STATE.session.exercises[${exIdx}].sets[${si}].reps=this.value;persist()">
+      <input type="text" inputmode="decimal" value="${set.rpe||''}" placeholder="—" style="font-size:14px;padding:9px 4px;text-align:center;opacity:${set.completed?.6:1}" oninput="STATE.session.exercises[${exIdx}].sets[${si}].rpe=this.value;persist()">
+      <div class="chk ${set.completed?'on':''}" onclick="toggleSet('${ex.id}','${set.id}')"></div>
+      <button class="btn-ghost btn-sm" style="padding:4px;min-height:auto;color:var(--text3);font-size:11px" onclick="removeSet('${ex.id}','${set.id}')">✕</button>
+    </div>`).join('')}
+  </div>
+  <div style="padding:10px 14px;background:var(--surf1)">
+    <button class="btn-sm btn-outline" style="width:100%;font-weight:600" onclick="addSet('${ex.id}')">+ Add Set</button>
+  </div>
+</div>`;
+}
+
+// ─────────────────────────────────────────────
+//  RENDER: HISTORY
+// ─────────────────────────────────────────────
+function rHistory() {
+  const hist = STATE.history;
+  return `
+<div class="sticky-header">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+    <button class="btn-ghost btn-sm" onclick="STATE.view='picker';render()" style="padding:6px 10px">← Programs</button>
+    <span class="label">Session History</span>
+  </div>
+</div>
+<div style="padding:14px 16px">
+  ${hist.length===0 ? `<div style="color:var(--text3);font-size:14px;padding:32px 0;text-align:center">No saved sessions yet.<br><span style="font-size:12px">Complete a session to see it here.</span></div>` : ''}
+  ${hist.map((h,i) => `
+  <div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:border-color .15s" onclick="previewSession(${i})" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div style="min-width:0;flex:1">
+        <div style="font-weight:700;font-size:15px;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h.title||'Untitled'}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="pill">${h.date}</span>
+          <span class="pill">${h.exercises.length} exercises</span>
+          <span class="pill">${totalCompletedSets(h)} sets</span>
+          ${h.endedAt ? `<span class="pill">${Math.round((new Date(h.endedAt)-new Date(h.startedAt))/60000)} min</span>` : '<span class="pill" style="color:var(--volt)">incomplete</span>'}
+        </div>
+      </div>
+      <button class="btn-ghost btn-sm" style="color:var(--text3);padding:4px;min-height:auto;flex-shrink:0;margin-left:8px" onclick="event.stopPropagation();deleteHistory(${i})">✕</button>
+    </div>
+  </div>`).join('')}
+</div>`;
+}
+
+function rPreview(idx) {
+  const h = STATE.history[idx];
+  if (!h) return rHistory();
+  return `
+<div class="sticky-header">
+  <button class="btn-ghost btn-sm" onclick="goHistory()" style="margin-bottom:8px;padding:6px 10px">← History</button>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div>
+      <div style="font-size:20px;font-weight:700;margin-bottom:5px">${h.title||'Untitled'}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="pill">${h.date}</span>
+        ${h.endedAt ? `<span class="pill">${Math.round((new Date(h.endedAt)-new Date(h.startedAt))/60000)} min</span>` : ''}
+        <span class="pill">${totalCompletedSets(h)} sets logged</span>
+      </div>
+    </div>
+    <button class="btn-sm btn-outline" onclick="exportCSV(STATE.history[${idx}])">Export CSV</button>
+  </div>
+</div>
+<div style="padding:14px 16px">
+  ${h.exercises.map(ex => `
+  <div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;margin-bottom:8px">
+    <div style="font-weight:700;font-size:15px;margin-bottom:3px">${ex.name||'Unnamed'}</div>
+    ${ex.notes ? `<div style="font-size:12px;color:var(--text3);margin-bottom:8px">${ex.notes}</div>` : ''}
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px">
+      ${ex.sets.filter(s=>s.completed).map(s=>`<span class="pill" style="background:var(--volt-subtle);border-color:var(--volt-border);color:var(--text)">${s.weight||'—'} × ${s.reps||'—'}${s.rpe?` <span style="color:var(--text3)">@${s.rpe}</span>`:''}</span>`).join('')}
+      ${ex.sets.filter(s=>s.completed).length===0 ? `<span style="color:var(--text3);font-size:12px">No completed sets</span>` : ''}
+    </div>
+  </div>`).join('')}
+</div>`;
+}
+
+// ─────────────────────────────────────────────
+//  SESSION MUTATIONS
+// ─────────────────────────────────────────────
+function addExercise() {
+  STATE.session.exercises.push({id:uid(),name:'',targetSets:'',targetRepRange:'',notes:'',restSeconds:90,sets:[]});
+  persist(); render();
+  setTimeout(()=>{ const els=document.querySelectorAll('[data-exid] input'); if(els.length) els[els.length-4]&&els[els.length-4].focus(); },80);
+}
+
+function removeEx(id) {
+  STATE.session.exercises = STATE.session.exercises.filter(e=>e.id!==id);
+  persist(); render();
+}
+
+function moveEx(idx, dir) {
+  const t = idx+dir;
+  if (t<0||t>=STATE.session.exercises.length) return;
+  [STATE.session.exercises[idx],STATE.session.exercises[t]] = [STATE.session.exercises[t],STATE.session.exercises[idx]];
+  persist(); render();
+}
+
+function addSet(exId) {
+  const ex = STATE.session.exercises.find(e=>e.id===exId); if(!ex) return;
+  const last = ex.sets[ex.sets.length-1];
+  ex.sets.push(makeSet(ex.sets.length+1, last?last.weight:'', last?last.reps:''));
+  vibrate(); persist(); render();
+  setTimeout(()=>{ const ws=document.querySelectorAll(`[data-exid="${exId}"] input[inputmode="decimal"]`); if(ws.length) ws[ws.length-2]&&ws[ws.length-2].focus(); },80);
+}
+
+function removeSet(exId, setId) {
+  const ex = STATE.session.exercises.find(e=>e.id===exId); if(!ex) return;
+  ex.sets = ex.sets.filter(s=>s.id!==setId);
+  ex.sets.forEach((s,i)=>s.setNumber=i+1);
+  persist(); render();
+}
+
+function toggleSet(exId, setId) {
+  const ex = STATE.session.exercises.find(e=>e.id===exId); if(!ex) return;
+  const set = ex.sets.find(s=>s.id===setId); if(!set) return;
+  set.completed = !set.completed;
+  if(set.completed) vibrate(70);
+  persist(); render();
+}
+
+// ─────────────────────────────────────────────
+//  HISTORY ACTIONS
+// ─────────────────────────────────────────────
+function goHistory() { STATE.view='history'; render(); }
+function previewSession(idx) { STATE.previewIdx=idx; STATE.view='preview'; render(); }
+function deleteHistory(idx) {
+  if (!confirm('Delete this session?')) return;
+  STATE.history.splice(idx,1);
+  persist(); render();
+}
+
+// ─────────────────────────────────────────────
+//  MAIN RENDER
+// ─────────────────────────────────────────────
+function render() {
+  const app = $('app');
+  switch(STATE.view) {
+    case 'picker':  app.innerHTML = rPicker(); break;
+    case 'session': app.innerHTML = rSession(); break;
+    case 'history': app.innerHTML = rHistory(); break;
+    case 'preview': app.innerHTML = rPreview(STATE.previewIdx); break;
+    default:        app.innerHTML = rPicker();
+  }
+  if (STATE.view==='session') renderTimerEl();
+}
+
+// ─────────────────────────────────────────────
+//  BOOT
+// ─────────────────────────────────────────────
+hydrate();
+render();
+</script>
+</body>
+</html>
