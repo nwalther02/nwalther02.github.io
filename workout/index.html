@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#0b0f1a">
 <title>Workout Logger</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -47,11 +48,300 @@ button:active{transform:scale(.96)}
 .pill{display:inline-flex;align-items:center;background:var(--surf3);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--text2)}
 .label{font-family:var(--ffc);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
 .sticky-header{background:var(--surf1);border-bottom:1px solid var(--border);padding:14px 16px;position:sticky;top:0;z-index:20}
+#sync-badge{position:fixed;bottom:calc(16px + var(--safe-b));right:16px;z-index:99;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:4px 9px;border-radius:20px;border:1px solid var(--border2);background:var(--surf2);color:var(--text3);opacity:0;transition:opacity .4s;pointer-events:none}
+#sync-badge.show{opacity:1}
+#sync-badge.syncing{color:var(--volt);border-color:var(--volt-border)}
+#sync-badge.synced{color:#4ade80;border-color:rgba(74,222,128,.3)}
+#sync-badge.local{color:var(--text3);border-color:var(--border2)}
+#sync-badge.error{color:var(--red);border-color:var(--red-bg)}
 </style>
 </head>
 <body>
 <div id="app"></div>
+<div id="sync-badge">Local</div>
 <script>
+// ─────────────────────────────────────────────
+//  GOOGLE DRIVE PERSISTENCE MODULE
+//  Scope: drive.appdata (hidden app folder, not visible in Drive UI)
+//  Replace DRIVE_CLIENT_ID with your OAuth 2.0 Web Client ID from
+//  Google Cloud Console → APIs & Services → Credentials.
+//  Authorized JS origins must include your site domain.
+// ─────────────────────────────────────────────
+const DRIVE_CLIENT_ID = '1047708481556-8cmfl178c0ufa6lalu34t8sd420nirjm.apps.googleusercontent.com'; // ← OAuth Client ID
+const DRIVE_SCOPE     = 'https://www.googleapis.com/auth/drive.appdata';
+const DRIVE_FILENAME  = 'workout-history.json';
+const LS_DRIVE_TOKEN  = 'wl3_drive_token';
+const LS_SYNC_TS      = 'wl3_sync_ts';
+
+const Drive = (() => {
+  let _token       = null;   // current access token string
+  let _tokenExpiry = 0;      // ms timestamp when token expires
+  let _fileId      = null;   // cached Drive file ID
+  let _tokenClient = null;   // GIS token client
+  let _saveTimer   = null;   // debounce handle
+  let _pendingSave = null;   // history payload queued while no token
+
+  // ── Sync badge ────────────────────────────────
+  function badge(state, text) {
+    const el = document.getElementById('sync-badge');
+    if (!el) return;
+    el.className = 'show ' + (state || '');
+    el.textContent = text || state;
+    clearTimeout(el._hide);
+    if (state === 'synced') {
+      el._hide = setTimeout(() => { el.className = ''; }, 3000);
+    }
+  }
+
+  // ── Token helpers ─────────────────────────────
+  function tokenValid() {
+    return _token && Date.now() < _tokenExpiry - 30000;
+  }
+
+  function storeToken(token, expiresInSec) {
+    _token       = token;
+    _tokenExpiry = Date.now() + (expiresInSec || 3600) * 1000;
+    try {
+      localStorage.setItem(LS_DRIVE_TOKEN, JSON.stringify({ token: _token, expiry: _tokenExpiry }));
+    } catch(e) {}
+  }
+
+  function loadCachedToken() {
+    try {
+      const raw = localStorage.getItem(LS_DRIVE_TOKEN);
+      if (!raw) return false;
+      const d = JSON.parse(raw);
+      if (d && d.token && d.expiry && Date.now() < d.expiry - 30000) {
+        _token       = d.token;
+        _tokenExpiry = d.expiry;
+        return true;
+      }
+    } catch(e) {}
+    return false;
+  }
+
+  // ── GIS init ──────────────────────────────────
+  function initTokenClient() {
+    if (_tokenClient) return;
+    if (!window.google?.accounts?.oauth2) return;
+    _tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CLIENT_ID,
+      scope:     DRIVE_SCOPE,
+      callback:  (resp) => {
+        if (resp.error) {
+          console.warn('[Drive] Token error:', resp.error);
+          badge('error', 'Drive unavailable');
+          return;
+        }
+        storeToken(resp.access_token, resp.expires_in);
+        console.log('[Drive] Token granted');
+        // Flush any queued save
+        if (_pendingSave !== null) {
+          const queued = _pendingSave;
+          _pendingSave = null;
+          saveWorkoutHistoryToDrive(queued);
+        } else {
+          // First auth — try to load from Drive
+          loadWorkoutHistoryFromDrive().then(hist => {
+            if (hist) mergeAndHydrateDriveHistory(hist);
+          });
+        }
+      },
+    });
+  }
+
+  // ── Drive REST helpers ────────────────────────
+  async function driveRequest(url, options = {}) {
+    if (!tokenValid()) return null;
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        'Authorization': `Bearer ${_token}`,
+        ...(options.headers || {}),
+      },
+    });
+    if (res.status === 401) {
+      // Token rejected — clear and request fresh
+      _token = null;
+      _tokenExpiry = 0;
+      try { localStorage.removeItem(LS_DRIVE_TOKEN); } catch(e) {}
+      return null;
+    }
+    return res;
+  }
+
+  async function listAppDataFiles() {
+    const res = await driveRequest(
+      `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name,modifiedTime)&q=name%3D%22${encodeURIComponent(DRIVE_FILENAME)}%22`
+    );
+    if (!res || !res.ok) return [];
+    const d = await res.json();
+    return d.files || [];
+  }
+
+  async function downloadFile(fileId) {
+    const res = await driveRequest(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`
+    );
+    if (!res || !res.ok) return null;
+    return await res.text();
+  }
+
+  async function createFile(jsonString) {
+    const meta = JSON.stringify({ name: DRIVE_FILENAME, parents: ['appDataFolder'] });
+    const body = new Blob([
+      '--boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + meta +
+      '\r\n--boundary\r\nContent-Type: application/json\r\n\r\n' + jsonString +
+      '\r\n--boundary--',
+    ], { type: 'multipart/related; boundary=boundary' });
+    const res = await driveRequest(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+      { method: 'POST', body }
+    );
+    if (!res || !res.ok) return null;
+    const d = await res.json();
+    return d.id || null;
+  }
+
+  async function updateFile(fileId, jsonString) {
+    const res = await driveRequest(
+      `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`,
+      { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: jsonString }
+    );
+    return res && res.ok;
+  }
+
+  // ── Public: load from Drive ───────────────────
+  async function loadWorkoutHistoryFromDrive() {
+    if (!tokenValid()) return null;
+    try {
+      const files = await listAppDataFiles();
+      if (!files.length) { console.log('[Drive] No history file found.'); return null; }
+      _fileId = files[0].id;
+      const raw = await downloadFile(_fileId);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return null;
+      console.log('[Drive] Loaded', parsed.length, 'sessions.');
+      return parsed;
+    } catch(e) {
+      console.warn('[Drive] Load error:', e);
+      return null;
+    }
+  }
+
+  // ── Public: save to Drive (debounced 2 s) ─────
+  function saveWorkoutHistoryToDrive(history) {
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(() => _doSave(history), 2000);
+  }
+
+  async function _doSave(history) {
+    if (!tokenValid()) {
+      console.log('[Drive] No valid token — queuing save.');
+      _pendingSave = history;
+      badge('local', 'Local only');
+      return;
+    }
+    badge('syncing', 'Syncing…');
+    try {
+      const payload = JSON.stringify(history);
+      if (!_fileId) {
+        const files = await listAppDataFiles();
+        _fileId = files.length ? files[0].id : null;
+      }
+      if (_fileId) {
+        await updateFile(_fileId, payload);
+      } else {
+        _fileId = await createFile(payload);
+      }
+      try { localStorage.setItem(LS_SYNC_TS, Date.now().toString()); } catch(e) {}
+      console.log('[Drive] Saved', history.length, 'sessions.');
+      badge('synced', 'Synced ✓');
+    } catch(e) {
+      console.warn('[Drive] Save error:', e);
+      badge('error', 'Sync failed');
+    }
+  }
+
+  // ── Public: unified persist (local + Drive) ───
+  function persistWorkoutHistory(history) {
+    // localStorage is always written first (synchronous, safe)
+    try { localStorage.setItem(LS_HIST, JSON.stringify(history)); } catch(e) {}
+    // Drive sync is async / debounced — never blocks UX
+    if (DRIVE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID_HERE') {
+      saveWorkoutHistoryToDrive(history);
+    }
+  }
+
+  // ── Public: request Drive access (called once) ─
+  function requestDriveAccess() {
+    initTokenClient();
+    if (!_tokenClient) { console.warn('[Drive] GIS not loaded yet.'); return; }
+    _tokenClient.requestAccessToken({ prompt: 'consent' });
+  }
+
+  // ── Boot ──────────────────────────────────────
+  async function init() {
+    if (DRIVE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
+      console.log('[Drive] Client ID not set — Drive sync disabled.');
+      badge('local', 'Local only');
+      setTimeout(() => { const el = document.getElementById('sync-badge'); if (el) el.className = ''; }, 2500);
+      return;
+    }
+
+    // Restore cached token silently
+    const hasCached = loadCachedToken();
+
+    // Wait for GIS to load (it's async)
+    await new Promise(resolve => {
+      if (window.google?.accounts?.oauth2) { resolve(); return; }
+      const t = setInterval(() => {
+        if (window.google?.accounts?.oauth2) { clearInterval(t); resolve(); }
+      }, 100);
+      setTimeout(() => { clearInterval(t); resolve(); }, 5000); // give up after 5 s
+    });
+
+    initTokenClient();
+
+    if (hasCached) {
+      console.log('[Drive] Resuming from cached token.');
+      const drivHistory = await loadWorkoutHistoryFromDrive();
+      if (drivHistory) mergeAndHydrateDriveHistory(drivHistory);
+      else badge('synced', 'Drive ready');
+    } else {
+      badge('local', 'Local only');
+      setTimeout(() => { const el = document.getElementById('sync-badge'); if (el) el.className = ''; }, 2500);
+    }
+  }
+
+  return { init, requestDriveAccess, persistWorkoutHistory, saveWorkoutHistoryToDrive, badge };
+})();
+
+// Called after Drive load — merges Drive history with local, prefers newer
+function mergeAndHydrateDriveHistory(driveHistory) {
+  const localRaw = (() => { try { return JSON.parse(localStorage.getItem(LS_HIST)) || []; } catch(e) { return []; } })();
+  // Build a map keyed by session id, preferring the entry with a later savedAt
+  const map = new Map();
+  [...localRaw, ...driveHistory].forEach(h => {
+    const existing = map.get(h.id);
+    if (!existing) { map.set(h.id, h); return; }
+    const existingTs = existing.savedAt || existing.endedAt || '';
+    const newTs      = h.savedAt || h.endedAt || '';
+    if (newTs > existingTs) map.set(h.id, h);
+  });
+  const merged = [...map.values()].sort((a, b) => {
+    return (b.savedAt || b.date || '') > (a.savedAt || a.date || '') ? 1 : -1;
+  }).slice(0, 50);
+  if (merged.length > 0) {
+    STATE.history = merged;
+    try { localStorage.setItem(LS_HIST, JSON.stringify(merged)); } catch(e) {}
+    render(); // refresh UI with merged history
+    console.log('[Drive] Merged history:', merged.length, 'sessions.');
+  }
+  Drive.badge('synced', 'Synced ✓');
+}
+
 // ─────────────────────────────────────────────
 //  PROGRAM TEMPLATES
 //  Edit this array to add/modify training days.
@@ -136,14 +426,19 @@ let STATE = {
 // ─────────────────────────────────────────────
 //  PERSISTENCE
 // ─────────────────────────────────────────────
-function persist() {
+function persist(syncHistory = false) {
   try {
     localStorage.setItem(LS_SESS, JSON.stringify({
       view: STATE.view,
       session: STATE.session,
     }));
-    localStorage.setItem(LS_HIST, JSON.stringify(STATE.history));
   } catch(e) {}
+  // History is synced to Drive only when it actually changed (session end, delete)
+  if (syncHistory) {
+    Drive.persistWorkoutHistory(STATE.history);
+  } else {
+    try { localStorage.setItem(LS_HIST, JSON.stringify(STATE.history)); } catch(e) {}
+  }
 }
 
 function hydrate() {
@@ -283,7 +578,10 @@ function rPicker() {
       <div class="label" style="margin-bottom:3px">Workout Logger</div>
       <div style="font-family:var(--ffc);font-size:22px;font-weight:700;color:var(--text)">Select Program</div>
     </div>
-    <button class="btn-sm btn-outline" onclick="goHistory()">History</button>
+    <div style="display:flex;gap:6px">
+      <button class="btn-sm btn-outline" onclick="goHistory()">History</button>
+      <button class="btn-sm btn-outline" onclick="Drive.requestDriveAccess()" title="Connect Google Drive backup" style="padding:8px 10px;font-size:14px">☁</button>
+    </div>
   </div>
   ${hasActive ? `
   <div style="margin-top:12px;background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:var(--r2);padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
@@ -398,7 +696,7 @@ function endSession() {
   if (!confirm('End and save this session?')) return;
   STATE.session.endedAt = new Date().toISOString();
   saveToHistory(STATE.session);
-  persist();
+  persist(true); // true = sync history to Drive
   render();
 }
 
@@ -597,7 +895,8 @@ function previewSession(idx) { STATE.previewIdx=idx; STATE.view='preview'; rende
 function deleteHistory(idx) {
   if (!confirm('Delete this session?')) return;
   STATE.history.splice(idx,1);
-  persist(); render();
+  persist(true); // true = sync history to Drive
+  render();
 }
 
 // ─────────────────────────────────────────────
@@ -620,6 +919,7 @@ function render() {
 // ─────────────────────────────────────────────
 hydrate();
 render();
+Drive.init(); // async — silently attempts Drive auth restore
 </script>
-</body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f50ed401b7ae1e7',t:'MTc3NzY2MDk1Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
