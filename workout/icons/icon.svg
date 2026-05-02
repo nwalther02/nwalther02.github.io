@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background — matches app --bg token -->
+  <rect width="512" height="512" rx="96" fill="#0b0f1a"/>
+
+  <!-- Dumbbell icon in volt green -->
+  <!-- Left plate -->
+  <rect x="68" y="188" width="56" height="136" rx="14" fill="#d4f500"/>
+  <!-- Left collar -->
+  <rect x="124" y="216" width="28" height="80" rx="6" fill="#b8d800"/>
+  <!-- Bar -->
+  <rect x="152" y="238" width="208" height="36" rx="8" fill="#d4f500"/>
+  <!-- Right collar -->
+  <rect x="360" y="216" width="28" height="80" rx="6" fill="#b8d800"/>
+  <!-- Right plate -->
+  <rect x="388" y="188" width="56" height="136" rx="14" fill="#d4f500"/>
+</svg>

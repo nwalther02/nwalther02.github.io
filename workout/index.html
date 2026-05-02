@@ -6,6 +6,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0b0f1a">
+<link rel="manifest" href="/workout/manifest.json">
+<link rel="apple-touch-icon" href="/workout/icons/icon-192.png">
 <title>Workout Logger</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -54,11 +56,17 @@ button:active{transform:scale(.96)}
 #sync-badge.synced{color:#4ade80;border-color:rgba(74,222,128,.3)}
 #sync-badge.local{color:var(--text3);border-color:var(--border2)}
 #sync-badge.error{color:var(--red);border-color:var(--red-bg)}
+#ex-sheet{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:50;display:none;align-items:flex-end;-webkit-tap-highlight-color:transparent}
+.sheet{background:var(--surf1);border-radius:var(--r3) var(--r3) 0 0;padding:20px 16px calc(24px + var(--safe-b));width:100%;max-height:82vh;overflow-y:auto}
+.sheet-handle{width:36px;height:4px;background:var(--surf4);border-radius:2px;margin:0 auto 20px}
+.lib-row{display:flex;align-items:center;gap:10px;background:var(--surf2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;cursor:pointer;transition:var(--tr);touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.lib-row:active{background:var(--surf3);border-color:var(--volt-border)}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <div id="sync-badge">Local</div>
+<div id="ex-sheet" onclick="if(event.target===this)closeExSheet()"><div class="sheet"></div></div>
 <script>
 // ─────────────────────────────────────────────
 //  GOOGLE DRIVE PERSISTENCE MODULE
@@ -349,61 +357,49 @@ function mergeAndHydrateDriveHistory(driveHistory) {
 // ─────────────────────────────────────────────
 const PROGRAMS = [
   {
-    id:'upper-a',
-    label:'Upper A',
-    tag:'Push Focus',
-    color:'#d4f500',
+    id:'upper-a', label:'Upper A', tag:'Push Focus', color:'#d4f500',
     description:'Horizontal push/pull emphasis. 3–4 sets per movement.',
     exercises:[
-      {name:'Barbell Bench Press',targetSets:'4',targetRepRange:'4–6',notes:'Pause 1s at chest. +2.5–5 lb if top of range hit.',restSeconds:180},
-      {name:'Barbell Row',targetSets:'4',targetRepRange:'6–8',notes:'Double overhand, chest to bar. Control the eccentric.',restSeconds:180},
-      {name:'Overhead Press',targetSets:'3',targetRepRange:'6–8',notes:'Full lockout. Brace hard.',restSeconds:150},
-      {name:'Lat Pulldown',targetSets:'3',targetRepRange:'8–10',notes:'Full stretch at top, drive elbows to hips.',restSeconds:120},
-      {name:'DB Lateral Raise',targetSets:'3',targetRepRange:'12–15',notes:'Slight forward lean, lead with elbows.',restSeconds:60},
-      {name:'Tricep Pushdown',targetSets:'3',targetRepRange:'12–15',notes:'Full extension, squeeze at bottom.',restSeconds:60},
+      {id:'barbell-bench-press',  equipment:'barbell',    name:'Barbell Bench Press',        targetSets:'4',targetRepRange:'4–6',  notes:'Pause 1s at chest. +2.5–5 lb if top of range hit.',restSeconds:180},
+      {id:'barbell-row',          equipment:'barbell',    name:'Barbell Row',                targetSets:'4',targetRepRange:'6–8',  notes:'Double overhand, chest to bar. Control the eccentric.',restSeconds:180},
+      {id:'overhead-press',       equipment:'barbell',    name:'Overhead Press',             targetSets:'3',targetRepRange:'6–8',  notes:'Full lockout. Brace hard.',restSeconds:150},
+      {id:'lat-pulldown',         equipment:'machine',    name:'Lat Pulldown',               targetSets:'3',targetRepRange:'8–10', notes:'Full stretch at top, drive elbows to hips.',restSeconds:120},
+      {id:'db-lateral-raise',     equipment:'dumbbell',   name:'DB Lateral Raise',           targetSets:'3',targetRepRange:'12–15',notes:'Slight forward lean, lead with elbows.',restSeconds:60},
+      {id:'tricep-pushdown',      equipment:'machine',    name:'Tricep Pushdown',            targetSets:'3',targetRepRange:'12–15',notes:'Full extension, squeeze at bottom.',restSeconds:60},
     ]
   },
   {
-    id:'upper-b',
-    label:'Upper B',
-    tag:'Pull Focus',
-    color:'#d4f500',
+    id:'upper-b', label:'Upper B', tag:'Pull Focus', color:'#d4f500',
     description:'Vertical pull/push emphasis. Higher rep accessories.',
     exercises:[
-      {name:'Pull-up / Weighted Pull-up',targetSets:'4',targetRepRange:'5–8',notes:'Full dead hang. Add weight when top of range is clean.',restSeconds:180},
-      {name:'Incline DB Press',targetSets:'4',targetRepRange:'8–10',notes:'30–45° incline. Control descent.',restSeconds:150},
-      {name:'Cable Row',targetSets:'3',targetRepRange:'10–12',notes:'Neutral grip. Full stretch, full contraction.',restSeconds:120},
-      {name:'DB Shoulder Press',targetSets:'3',targetRepRange:'8–10',notes:'Seated or standing. Full ROM.',restSeconds:120},
-      {name:'Face Pull',targetSets:'3',targetRepRange:'15–20',notes:'External rotation at end range. Light weight, high quality.',restSeconds:60},
-      {name:'DB Curl',targetSets:'3',targetRepRange:'10–12',notes:'Supinate at top. No momentum.',restSeconds:60},
+      {id:'pull-up-weighted',     equipment:'bodyweight', name:'Pull-up / Weighted Pull-up', targetSets:'4',targetRepRange:'5–8',  notes:'Full dead hang. Add weight when top of range is clean.',restSeconds:180},
+      {id:'incline-db-press',     equipment:'dumbbell',   name:'Incline DB Press',           targetSets:'4',targetRepRange:'8–10', notes:'30–45° incline. Control descent.',restSeconds:150},
+      {id:'cable-row',            equipment:'machine',    name:'Cable Row',                  targetSets:'3',targetRepRange:'10–12',notes:'Neutral grip. Full stretch, full contraction.',restSeconds:120},
+      {id:'db-shoulder-press',    equipment:'dumbbell',   name:'DB Shoulder Press',          targetSets:'3',targetRepRange:'8–10', notes:'Seated or standing. Full ROM.',restSeconds:120},
+      {id:'face-pull',            equipment:'machine',    name:'Face Pull',                  targetSets:'3',targetRepRange:'15–20',notes:'External rotation at end range. Light weight, high quality.',restSeconds:60},
+      {id:'db-curl',              equipment:'dumbbell',   name:'DB Curl',                    targetSets:'3',targetRepRange:'10–12',notes:'Supinate at top. No momentum.',restSeconds:60},
     ]
   },
   {
-    id:'lower-a',
-    label:'Lower A',
-    tag:'Squat Focus',
-    color:'#d4f500',
+    id:'lower-a', label:'Lower A', tag:'Squat Focus', color:'#d4f500',
     description:'Quad-dominant. Heavy squat pattern leads.',
     exercises:[
-      {name:'Barbell Back Squat',targetSets:'4',targetRepRange:'4–6',notes:'Full depth, brace hard. +2.5–5 lb if top of range hit.',restSeconds:180},
-      {name:'Leg Press',targetSets:'3',targetRepRange:'8–10',notes:'Feet shoulder-width. Full ROM, do not lock out hard.',restSeconds:120},
-      {name:'DB Bulgarian Split Squat',targetSets:'3',targetRepRange:'10–12',notes:'Rear foot on bench. DBs in each hand.',restSeconds:90},
-      {name:'Leg Curl (Machine)',targetSets:'3',targetRepRange:'10–12',notes:'Full stretch, curl to full contraction.',restSeconds:90},
-      {name:'Standing Calf Raise',targetSets:'4',targetRepRange:'15–20',notes:'2-sec eccentric. Full ROM. 1 RIR.',restSeconds:60},
+      {id:'barbell-back-squat',       equipment:'barbell',    name:'Barbell Back Squat',       targetSets:'4',targetRepRange:'4–6',   notes:'Full depth, brace hard. +2.5–5 lb if top of range hit.',restSeconds:180},
+      {id:'leg-press',                equipment:'machine',    name:'Leg Press',                targetSets:'3',targetRepRange:'8–10',  notes:'Feet shoulder-width. Full ROM, do not lock out hard.',restSeconds:120},
+      {id:'db-bulgarian-split-squat', equipment:'dumbbell',   name:'DB Bulgarian Split Squat', targetSets:'3',targetRepRange:'10–12', notes:'Rear foot on bench. DBs in each hand.',restSeconds:90},
+      {id:'leg-curl-machine',         equipment:'machine',    name:'Leg Curl (Machine)',        targetSets:'3',targetRepRange:'10–12', notes:'Full stretch, curl to full contraction.',restSeconds:90},
+      {id:'standing-calf-raise',      equipment:'bodyweight', name:'Standing Calf Raise',       targetSets:'4',targetRepRange:'15–20', notes:'2-sec eccentric. Full ROM. 1 RIR.',restSeconds:60},
     ]
   },
   {
-    id:'lower-b',
-    label:'Lower B',
-    tag:'Hinge Focus',
-    color:'#d4f500',
+    id:'lower-b', label:'Lower B', tag:'Hinge Focus', color:'#d4f500',
     description:'Hip-dominant. RDL leads, split squat accessory.',
     exercises:[
-      {name:'Barbell Back Squat',targetSets:'3',targetRepRange:'6–8',notes:'Full depth, brace hard. +2.5–5 lb if top of range hit. 2 RIR.',restSeconds:180},
-      {name:'Romanian Deadlift (Barbell)',targetSets:'3',targetRepRange:'8–10',notes:'Hinge deep, stretch hamstrings, neutral spine. 2 RIR.',restSeconds:90},
-      {name:'DB Bulgarian Split Squat',targetSets:'3',targetRepRange:'10–12/leg',notes:'Rear foot on bench. DBs 25–35 lb. 2 RIR.',restSeconds:90},
-      {name:'DB Walking Lunge',targetSets:'2',targetRepRange:'12/leg',notes:'Upright torso, full step. DBs 20–30 lb. 2 RIR.',restSeconds:60},
-      {name:'Standing Calf Raise',targetSets:'3',targetRepRange:'15–20',notes:'Full ROM, 2-sec eccentric. 1 RIR.',restSeconds:60},
+      {id:'barbell-back-squat',        equipment:'barbell',    name:'Barbell Back Squat',          targetSets:'3',targetRepRange:'6–8',    notes:'Full depth, brace hard. +2.5–5 lb if top of range hit. 2 RIR.',restSeconds:180},
+      {id:'romanian-deadlift-barbell', equipment:'barbell',    name:'Romanian Deadlift (Barbell)', targetSets:'3',targetRepRange:'8–10',   notes:'Hinge deep, stretch hamstrings, neutral spine. 2 RIR.',restSeconds:90},
+      {id:'db-bulgarian-split-squat',  equipment:'dumbbell',   name:'DB Bulgarian Split Squat',    targetSets:'3',targetRepRange:'10–12/leg',notes:'Rear foot on bench. DBs 25–35 lb. 2 RIR.',restSeconds:90},
+      {id:'db-walking-lunge',          equipment:'dumbbell',   name:'DB Walking Lunge',            targetSets:'2',targetRepRange:'12/leg', notes:'Upright torso, full step. DBs 20–30 lb. 2 RIR.',restSeconds:60},
+      {id:'standing-calf-raise',       equipment:'bodyweight', name:'Standing Calf Raise',         targetSets:'3',targetRepRange:'15–20',  notes:'Full ROM, 2-sec eccentric. 1 RIR.',restSeconds:60},
     ]
   },
 ];
@@ -411,9 +407,12 @@ const PROGRAMS = [
 // ─────────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────────
-const LS_SESS  = 'wl3_session';
-const LS_HIST  = 'wl3_history';
-const LS_VIEW  = 'wl3_view';
+const LS_SESS      = 'wl3_session';
+const LS_HIST      = 'wl3_history';
+const LS_VIEW      = 'wl3_view';
+const LS_EXERCISES = 'wl3_exercises';
+const LS_ROTATION  = 'wl3_rotation';
+const LS_SCHEMA_V1 = 'wl3_schema_v1';
 
 let STATE = {
   view: 'picker',       // picker | session | history | preview
@@ -483,6 +482,13 @@ function sessionFromProgram(prog) {
     endedAt: null,
     exercises: prog.exercises.map(ex => ({
       id: uid(),
+      exerciseId: ex.id || null,
+      exerciseNameSnapshot: ex.name,
+      equipment: ex.equipment || 'barbell',
+      matchStatus: 'matched',
+      suggestion: null,
+      virtualWeight: null,
+      wasReanchored: false,
       name: ex.name,
       targetSets: ex.targetSets,
       targetRepRange: ex.targetRepRange,
@@ -500,6 +506,7 @@ function totalCompletedSets(sess) {
 
 function saveToHistory(sess) {
   if (!sess) return;
+  finalizeSessionExercises(sess);
   const entry = { ...sess, savedAt: new Date().toISOString() };
   // Replace existing entry with same id, or prepend
   const idx = STATE.history.findIndex(h => h.id === sess.id);
@@ -593,6 +600,7 @@ function rPicker() {
   </div>` : ''}
 </div>
 <div style="padding:16px">
+  ${rNextWorkoutBanner()}
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
     ${PROGRAMS.map(p => `
     <div onclick="loadProgram('${p.id}')" style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r3);padding:16px;cursor:pointer;transition:var(--tr);position:relative;overflow:hidden" onmouseenter="this.style.borderColor='var(--volt-border)';this.style.background='var(--surf3)'" onmouseleave="this.style.borderColor='var(--border)';this.style.background='var(--surf2)'" ontouchstart="this.style.borderColor='var(--volt-border)';this.style.background='var(--surf3)'" ontouchend="this.style.borderColor='var(--border)';this.style.background='var(--surf2)'">
@@ -615,6 +623,8 @@ function loadProgram(id) {
     saveToHistory(STATE.session);
   }
   STATE.session = sessionFromProgram(prog);
+  buildSessionSuggestions(STATE.session);
+  advanceRotation();
   STATE.view = 'session';
   persist();
   render();
@@ -678,7 +688,7 @@ function rSession() {
 ${rTimerBlock()}
 ${sess.exercises.map((ex,i) => rExercise(ex,i)).join('')}
 <div style="padding:14px 16px 0">
-  <button class="btn-primary" style="width:100%;min-height:52px;font-size:15px;letter-spacing:.05em;border-radius:var(--r3)" onclick="addExercise()">+ Add Exercise</button>
+  <button class="btn-primary" style="width:100%;min-height:52px;font-size:15px;letter-spacing:.05em;border-radius:var(--r3)" onclick="openExSheet()">+ Add Exercise</button>
 </div>
 <div style="margin:20px 16px 0;padding:14px 16px;background:var(--surf1);border-radius:var(--r2);border:1px solid var(--border)">
   <div class="label" style="margin-bottom:5px">How to use</div>
@@ -748,6 +758,7 @@ function rExercise(ex, idx) {
           <input placeholder="Sets" value="${ex.targetSets||''}" style="font-size:13px;padding:7px 10px;width:65px;flex:none" oninput="STATE.session.exercises[${exIdx}].targetSets=this.value;persist()">
           <input placeholder="Rep range" value="${ex.targetRepRange||''}" style="font-size:13px;padding:7px 10px;flex:1;min-width:0" oninput="STATE.session.exercises[${exIdx}].targetRepRange=this.value;persist()">
         </div>
+        ${rSuggestionHint(ex)}
         ${ex.notes ? `<div style="margin-top:9px;font-size:12px;color:var(--text3);line-height:1.55;padding:8px 11px;background:var(--surf3);border-radius:7px;border-left:2px solid var(--volt-border)">${ex.notes}</div>` : ''}
       </div>
       <button class="btn-ghost btn-danger btn-sm" style="padding:6px;min-height:auto;font-size:13px;flex-shrink:0" onclick="removeEx('${ex.id}')">✕</button>
@@ -790,6 +801,13 @@ function rHistory() {
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
     <button class="btn-ghost btn-sm" onclick="STATE.view='picker';render()" style="padding:6px 10px">← Programs</button>
     <span class="label">Session History</span>
+    <div style="margin-left:auto;display:flex;gap:6px">
+      <button class="btn-sm btn-outline" onclick="exportBackup()" title="Download full backup JSON">Export</button>
+      <label class="btn-sm btn-outline" style="cursor:pointer;display:inline-flex;align-items:center;padding:8px 12px;font-size:12px;min-height:38px;border-radius:8px;border:1px solid var(--border2);color:var(--text2);background:transparent" title="Restore from backup JSON">
+        Import
+        <input type="file" accept="application/json" style="display:none" onchange="importBackup(event)">
+      </label>
+    </div>
   </div>
 </div>
 <div style="padding:14px 16px">
@@ -844,10 +862,441 @@ function rPreview(idx) {
 }
 
 // ─────────────────────────────────────────────
+//  EXERCISE LIBRARY
+// ─────────────────────────────────────────────
+function loadCustomExercises() {
+  try { return JSON.parse(localStorage.getItem(LS_EXERCISES)) || []; } catch(e) { return []; }
+}
+function saveCustomExercises(list) {
+  try { localStorage.setItem(LS_EXERCISES, JSON.stringify(list)); } catch(e) {}
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function openExSheet() {
+  const el = document.getElementById('ex-sheet');
+  el.querySelector('.sheet').innerHTML = exSheetBody();
+  el.style.display = 'flex';
+  setTimeout(() => { const inp = document.getElementById('ex-name-inp'); if(inp) inp.focus(); }, 80);
+}
+
+function closeExSheet() {
+  document.getElementById('ex-sheet').style.display = 'none';
+}
+
+function exSheetBody() {
+  const lib = loadCustomExercises();
+  const libHtml = lib.length ? `
+    <div class="label" style="margin-bottom:8px">Saved Exercises</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:18px">
+      ${lib.map(ex => `
+      <div class="lib-row" onclick="addExFromLib('${ex.id}')">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ex.name)}</div>
+          ${ex.targetSets || ex.targetRepRange ? `<div style="font-size:12px;color:var(--text3);margin-top:2px">${[ex.targetSets && escHtml(ex.targetSets)+' sets', ex.targetRepRange && escHtml(ex.targetRepRange)+' reps'].filter(Boolean).join(' · ')}</div>` : ''}
+        </div>
+        <button class="btn-danger btn-sm" style="flex-shrink:0;min-height:40px;padding:8px 12px" onclick="event.stopPropagation();deleteLibEx('${ex.id}')">✕</button>
+      </div>`).join('')}
+    </div>
+    <div style="height:1px;background:var(--border);margin-bottom:18px"></div>` : '';
+
+  return `
+    <div class="sheet-handle"></div>
+    <div style="font-family:var(--ffc);font-size:22px;font-weight:700;margin-bottom:18px">Add Exercise</div>
+    ${libHtml}
+    <div class="label" style="margin-bottom:10px">New Exercise</div>
+    <input id="ex-name-inp" type="text" placeholder="Exercise name" autocomplete="off"
+      style="margin-bottom:10px;font-size:16px"
+      onkeydown="if(event.key==='Enter'){document.getElementById('ex-sets-inp').focus()}">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <input id="ex-sets-inp" type="text" inputmode="numeric" placeholder="Sets  (e.g. 3)"
+        style="font-size:16px"
+        onkeydown="if(event.key==='Enter'){document.getElementById('ex-reps-inp').focus()}">
+      <input id="ex-reps-inp" type="text" placeholder="Reps  (e.g. 8–12)"
+        style="font-size:16px"
+        onkeydown="if(event.key==='Enter'){submitExToSession(false)}">
+    </div>
+    <div id="ex-err" style="color:var(--red);font-size:13px;min-height:20px;margin-bottom:8px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <button class="btn-primary" style="min-height:52px;font-size:15px;letter-spacing:.03em"
+        onclick="submitExToSession(false)">Add to Session</button>
+      <button class="btn-outline" style="min-height:52px;font-size:15px"
+        onclick="submitExToSession(true)">Add + Save</button>
+    </div>
+    <button class="btn-ghost" style="width:100%;font-size:13px;color:var(--text3);min-height:44px"
+      onclick="closeExSheet();addExercise()">+ Add blank exercise instead</button>`;
+}
+
+function submitExToSession(save) {
+  const nameEl = document.getElementById('ex-name-inp');
+  const setsEl = document.getElementById('ex-sets-inp');
+  const repsEl = document.getElementById('ex-reps-inp');
+  const errEl  = document.getElementById('ex-err');
+  const name   = nameEl ? nameEl.value.trim() : '';
+
+  if (!name) {
+    if (errEl) errEl.textContent = 'Exercise name is required.';
+    if (nameEl) nameEl.focus();
+    return;
+  }
+  if (errEl) errEl.textContent = '';
+
+  const sets = setsEl ? setsEl.value.trim() : '';
+  const reps = repsEl ? repsEl.value.trim() : '';
+
+  if (save) {
+    const lib = loadCustomExercises();
+    const isDupe = lib.some(e => e.name.trim().toLowerCase() === name.toLowerCase());
+    if (!isDupe) {
+      lib.push({ id: uid(), name, targetSets: sets, targetRepRange: reps, notes: '', restSeconds: 90 });
+      saveCustomExercises(lib);
+    }
+  }
+
+  STATE.session.exercises.push({
+    id: uid(),
+    exerciseId: null,
+    exerciseNameSnapshot: name,
+    equipment: 'dumbbell',
+    matchStatus: 'fallback-new',
+    suggestion: null,
+    virtualWeight: null,
+    wasReanchored: false,
+    name,
+    targetSets: sets, targetRepRange: reps,
+    notes: '', restSeconds: 90, sets: []
+  });
+  persist();
+  closeExSheet();
+  render();
+  setTimeout(() => {
+    const cards = document.querySelectorAll('[data-exid]');
+    if (cards.length) { const inp = cards[cards.length-1].querySelector('input'); if(inp) inp.focus(); }
+  }, 80);
+}
+
+function addExFromLib(id) {
+  const ex = loadCustomExercises().find(e => e.id === id);
+  if (!ex || !STATE.session) return;
+  const newEx = {
+    id: uid(),
+    exerciseId: ex.id || null,
+    exerciseNameSnapshot: ex.name,
+    equipment: ex.equipment || 'dumbbell',
+    matchStatus: 'fallback-new',
+    suggestion: null,
+    virtualWeight: null,
+    wasReanchored: false,
+    name: ex.name,
+    targetSets: ex.targetSets, targetRepRange: ex.targetRepRange,
+    notes: ex.notes || '', restSeconds: ex.restSeconds || 90, sets: []
+  };
+  STATE.session.exercises.push(newEx);
+  buildSessionSuggestions(STATE.session);
+  persist();
+  closeExSheet();
+  render();
+  vibrate(50);
+}
+
+function deleteLibEx(id) {
+  saveCustomExercises(loadCustomExercises().filter(e => e.id !== id));
+  // Refresh sheet in-place without closing
+  const el = document.getElementById('ex-sheet');
+  if (el && el.style.display !== 'none') {
+    el.querySelector('.sheet').innerHTML = exSheetBody();
+    setTimeout(() => { const inp = document.getElementById('ex-name-inp'); if(inp) inp.focus(); }, 50);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  IRON LOGIC — PROGRESSION ENGINE
+// ─────────────────────────────────────────────
+const DB_CEILING       = 40;
+const STARTING_WEIGHTS = {
+  'barbell-bench-press':       95,
+  'barbell-row':               95,
+  'overhead-press':            65,
+  'barbell-back-squat':        95,
+  'romanian-deadlift-barbell': 95,
+  'pull-up-weighted':           0,
+  'incline-db-press':          25,
+  'db-shoulder-press':         20,
+  'db-curl':                   15,
+  'db-lateral-raise':          15,
+  'db-bulgarian-split-squat':  20,
+  'db-walking-lunge':          20,
+};
+
+function parseGymInput(val) {
+  const n = parseFloat(String(val).replace(/[^\d.]/g, ''));
+  return isNaN(n) ? null : n;
+}
+
+function normalizeExerciseName(name) {
+  return String(name).trim().toLowerCase()
+    .replace(/-/g, ' ').replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim()
+    .replace(/\s/g, '-');
+}
+
+function snapWeight(val, equipment) {
+  const inc = (equipment === 'barbell' && val >= 100) ? 5 : 2.5;
+  return Math.round(val / inc) * inc;
+}
+
+function buildExerciseRegistry() {
+  const byId   = new Map();
+  const bySlug = new Map();
+  const reg = ex => {
+    if (ex.id) byId.set(ex.id, ex);
+    const slug = normalizeExerciseName(ex.name);
+    if (slug && !bySlug.has(slug)) bySlug.set(slug, ex);
+  };
+  PROGRAMS.forEach(p => p.exercises.forEach(reg));
+  loadCustomExercises().forEach(ex => reg({ ...ex, equipment: ex.equipment || 'dumbbell' }));
+  return { byId, bySlug };
+}
+
+// Returns { set, exercise, session } for the most-recent completed set, or null.
+function getLastSet(exerciseId, normalizedSlug, history) {
+  for (let si = 0; si < history.length; si++) {
+    const sess = history[si];
+    for (let ei = 0; ei < sess.exercises.length; ei++) {
+      const ex = sess.exercises[ei];
+      const idMatch   = exerciseId && ex.exerciseId === exerciseId;
+      const slugMatch = !idMatch && normalizedSlug && normalizeExerciseName(ex.name) === normalizedSlug;
+      if (idMatch || slugMatch) {
+        const done = (ex.sets || []).filter(s => s.completed && s.weight != null && s.reps != null);
+        if (done.length) return { set: done[done.length - 1], exercise: ex, session: sess };
+      }
+    }
+  }
+  return null;
+}
+
+// Returns { suggestedWeight, virtualWeight, technique, hint } or null.
+function computeProgression(lastRecord, equipment, exerciseId) {
+  if (!lastRecord) {
+    const startW = STARTING_WEIGHTS[exerciseId] ?? null;
+    return startW !== null
+      ? { suggestedWeight: startW, virtualWeight: startW, technique: null, hint: 'Starting weight' }
+      : null;
+  }
+  const { set, exercise } = lastRecord;
+  const weight = parseGymInput(set.weight);
+  const rpe    = parseGymInput(set.rpe);
+  if (weight === null) return null;
+
+  const prevVirtual = parseGymInput(exercise.virtualWeight) ?? weight;
+  const newVirtual  = (rpe === null || rpe <= 8) ? prevVirtual * 1.025 : prevVirtual;
+
+  if (equipment === 'dumbbell') {
+    const gap = newVirtual - DB_CEILING;
+    if (gap > 0) {
+      let technique = gap < 5 ? 'Tempo 3-1-1-0' : gap <= 15 ? 'Myo-reps' : 'Myo-reps+';
+      return { suggestedWeight: snapWeight(Math.min(newVirtual, DB_CEILING), equipment), virtualWeight: newVirtual, technique, hint: null };
+    }
+  }
+  return { suggestedWeight: snapWeight(newVirtual, equipment), virtualWeight: newVirtual, technique: null, hint: null };
+}
+
+// Mutates each session exercise with suggestion + matchStatus.
+function buildSessionSuggestions(session) {
+  if (!session || !session.exercises) return;
+  const history  = STATE.history;
+  const registry = buildExerciseRegistry();
+  session.exercises.forEach(ex => {
+    const regEx     = ex.exerciseId ? registry.byId.get(ex.exerciseId) : registry.bySlug.get(normalizeExerciseName(ex.name));
+    const equipment = ex.equipment || regEx?.equipment || 'barbell';
+    if (!ex.matchStatus || ex.matchStatus === 'matched') {
+      ex.matchStatus = regEx ? 'matched' : (ex.exerciseId ? 'fallback-unresolved' : 'fallback-new');
+    }
+    const lastRecord = getLastSet(ex.exerciseId, normalizeExerciseName(ex.name), history);
+    const prog = computeProgression(lastRecord, equipment, ex.exerciseId);
+    ex.suggestion    = prog || null;
+    ex.virtualWeight = prog ? prog.virtualWeight : null;
+  });
+}
+
+// Returns HTML hint string for an exercise card.
+function rSuggestionHint(ex) {
+  if (ex.matchStatus === 'fallback-unresolved') {
+    return `<div style="margin-top:6px;font-size:12px;color:#f5a623;background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:6px;padding:6px 10px">⚠ Exercise not recognized — no progression data. Log a set to begin tracking.</div>`;
+  }
+  const s = ex.suggestion;
+  if (!s) return '';
+  const tag  = s.technique ? `<span style="margin-left:6px;font-size:10px;color:var(--volt);background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:4px;padding:1px 6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">${s.technique}</span>` : '';
+  const hint = s.hint ? `<span style="color:var(--text3)"> · ${s.hint}</span>` : '';
+  return `<div style="margin-top:6px;font-size:12px;color:var(--text2)">Suggested: <span style="font-weight:700;color:var(--text)">~${s.suggestedWeight} lb</span>${tag}${hint}</div>`;
+}
+
+// Writes virtualWeight back to history records. Called at saveToHistory().
+function finalizeSessionExercises(sess) {
+  if (!sess || !sess.exercises) return;
+  sess.exercises.forEach(ex => {
+    const done = (ex.sets || []).filter(s => s.completed);
+    if (!done.length) return;
+    const logged = parseGymInput(done[done.length - 1].weight);
+    if (logged === null) return;
+    const suggested = ex.suggestion ? ex.suggestion.suggestedWeight : null;
+    if (suggested !== null && Math.abs(logged - suggested) > Math.max(suggested * 0.10, 5.0)) {
+      ex.virtualWeight = logged;
+      ex.wasReanchored = true;
+    }
+    if (ex.virtualWeight == null) ex.virtualWeight = logged;
+  });
+}
+
+// ─────────────────────────────────────────────
+//  ROTATION TRACKER
+// ─────────────────────────────────────────────
+const ROTATION_ORDER = ['upper-a', 'upper-b', 'lower-a', 'lower-b'];
+
+function getRotation() {
+  try { const raw = localStorage.getItem(LS_ROTATION); if (raw) return JSON.parse(raw); } catch(e) {}
+  return { order: ROTATION_ORDER.slice(), index: 0 };
+}
+function saveRotation(rot) { try { localStorage.setItem(LS_ROTATION, JSON.stringify(rot)); } catch(e) {} }
+function advanceRotation() {
+  const rot = getRotation();
+  rot.index = (rot.index + 1) % rot.order.length;
+  saveRotation(rot);
+}
+function getNextProgramId() {
+  const rot = getRotation();
+  return rot.order[rot.index % rot.order.length];
+}
+
+function rNextWorkoutBanner() {
+  const nextId   = getNextProgramId();
+  const nextProg = PROGRAMS.find(p => p.id === nextId);
+  if (!nextProg) return '';
+  return `<div style="margin-bottom:14px;background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:var(--r2);padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:11px;color:var(--volt);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">Up Next</div>
+      <div style="font-size:14px;font-weight:600">${nextProg.label} <span style="font-weight:400;color:var(--text2)">· ${nextProg.tag}</span></div>
+    </div>
+    <button class="btn-sm btn-primary" onclick="loadProgram('${nextProg.id}')">Start →</button>
+  </div>`;
+}
+
+// ─────────────────────────────────────────────
+//  MIGRATION — DRY RUN + APPLY
+// ─────────────────────────────────────────────
+function runMigrationDryRun(history) {
+  const registry = buildExerciseRegistry();
+  const rows = history.flatMap(sess =>
+    (sess.exercises || []).map(ex => {
+      const slug = normalizeExerciseName(ex.name);
+      const match = registry.bySlug.get(slug);
+      return {
+        session: sess.title || sess.id,
+        date: sess.date,
+        name: ex.name,
+        exerciseId_before: ex.exerciseId || null,
+        exerciseId_after:  ex.exerciseId || (match ? match.id : null),
+        status: ex.exerciseId ? 'already-set' : match ? 'will-match' : 'unresolved',
+      };
+    })
+  );
+  console.group('[Iron Logic] Migration Dry Run — verify before/after');
+  console.table(rows);
+  console.groupEnd();
+}
+
+function applyMigration(history) {
+  const registry = buildExerciseRegistry();
+  history.forEach(sess => {
+    (sess.exercises || []).forEach(ex => {
+      if (!ex.exerciseId) {
+        const match = registry.bySlug.get(normalizeExerciseName(ex.name));
+        ex.exerciseId           = match ? match.id : null;
+        ex.exerciseNameSnapshot = ex.exerciseNameSnapshot || ex.name;
+        ex.equipment            = ex.equipment || (match ? match.equipment : 'barbell');
+        ex.matchStatus          = match ? 'matched' : 'fallback-unresolved';
+      }
+      (ex.sets || []).forEach(s => {
+        const w = parseGymInput(s.weight); if (w !== null) s.weight = w;
+        const r = parseGymInput(s.reps);   if (r !== null) s.reps   = r;
+        const rpe = parseGymInput(s.rpe);  if (rpe !== null) s.rpe  = rpe;
+      });
+    });
+  });
+}
+
+function runMigration() {
+  try {
+    if (localStorage.getItem(LS_SCHEMA_V1)) return;
+    if (!STATE.history || STATE.history.length === 0) {
+      localStorage.setItem(LS_SCHEMA_V1, '1');
+      return;
+    }
+    runMigrationDryRun(STATE.history);
+    applyMigration(STATE.history);
+    try { localStorage.setItem(LS_HIST, JSON.stringify(STATE.history)); } catch(e) {}
+    localStorage.setItem(LS_SCHEMA_V1, '1');
+    console.log('[Iron Logic] Migration applied successfully.');
+  } catch(e) {
+    console.warn('[Iron Logic] Migration error:', e);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  BACKUP / RESTORE
+// ─────────────────────────────────────────────
+function exportBackup() {
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    history: STATE.history,
+    customExercises: loadCustomExercises(),
+    rotation: getRotation(),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `iron-logic-backup-${today()}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importBackup(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data.history)) throw new Error('Invalid backup format — missing history array');
+      if (!confirm(`Import ${data.history.length} sessions? This merges with existing history.`)) return;
+      const map = new Map();
+      [...STATE.history, ...data.history].forEach(h => {
+        const ex = map.get(h.id);
+        if (!ex) { map.set(h.id, h); return; }
+        if ((h.savedAt || h.endedAt || '') > (ex.savedAt || ex.endedAt || '')) map.set(h.id, h);
+      });
+      STATE.history = [...map.values()]
+        .sort((a, b) => (b.savedAt || b.date || '') > (a.savedAt || a.date || '') ? 1 : -1)
+        .slice(0, 50);
+      if (Array.isArray(data.customExercises)) saveCustomExercises(data.customExercises);
+      persist(true);
+      alert(`Imported. ${STATE.history.length} sessions in history.`);
+      render();
+    } catch(err) {
+      alert('Import failed: ' + err.message);
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ─────────────────────────────────────────────
 //  SESSION MUTATIONS
 // ─────────────────────────────────────────────
 function addExercise() {
-  STATE.session.exercises.push({id:uid(),name:'',targetSets:'',targetRepRange:'',notes:'',restSeconds:90,sets:[]});
+  STATE.session.exercises.push({id:uid(),exerciseId:null,exerciseNameSnapshot:'',equipment:'barbell',matchStatus:'fallback-new',suggestion:null,virtualWeight:null,wasReanchored:false,name:'',targetSets:'',targetRepRange:'',notes:'',restSeconds:90,sets:[]});
   persist(); render();
   setTimeout(()=>{ const els=document.querySelectorAll('[data-exid] input'); if(els.length) els[els.length-4]&&els[els.length-4].focus(); },80);
 }
@@ -883,7 +1332,13 @@ function toggleSet(exId, setId) {
   const ex = STATE.session.exercises.find(e=>e.id===exId); if(!ex) return;
   const set = ex.sets.find(s=>s.id===setId); if(!set) return;
   set.completed = !set.completed;
-  if(set.completed) vibrate(70);
+  if (set.completed) {
+    // Cast-on-write: coerce string inputs to numbers at the completion boundary
+    const w = parseGymInput(set.weight); if (w !== null) set.weight = w;
+    const r = parseGymInput(set.reps);   if (r !== null) set.reps   = r;
+    const rpe = parseGymInput(set.rpe);  if (rpe !== null) set.rpe  = rpe;
+    vibrate(70);
+  }
   persist(); render();
 }
 
@@ -918,8 +1373,18 @@ function render() {
 //  BOOT
 // ─────────────────────────────────────────────
 hydrate();
+runMigration();
 render();
 Drive.init(); // async — silently attempts Drive auth restore
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/workout/sw.js')
+      .then(function (reg) { console.log('[SW] registered, scope:', reg.scope); })
+      .catch(function (err) { console.warn('[SW] registration failed:', err); });
+  });
+}
 </script>
 <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f50ed401b7ae1e7',t:'MTc3NzY2MDk1Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
