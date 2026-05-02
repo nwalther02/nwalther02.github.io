@@ -170,7 +170,29 @@ VALUES
 
     (18, 'Chin-up',  'back', 'vertical_pull', 3,
      0, NULL, NULL, NULL,
-     '{"grip":"supinated","setup":"pull_up_bar"}');
+     '{"grip":"supinated","setup":"pull_up_bar","cue":"dead_hang_drive_elbows_to_hips","add_load_at_top_of_range":true}');
+
+-- Barbell accessory added with home-gym conversion (replaces Leg Press machine)
+INSERT INTO exercises
+    (exercise_id, name, muscle_group, movement_plane, equipment_id,
+     is_anchor, angle_variant, weight_ceiling, mds_fallback_id, metadata)
+VALUES
+    (19, 'Barbell Front Squat', 'quad', 'knee_dominant', 1,
+     0, NULL, NULL, NULL,
+     '{"grip":"clean_or_cross_arm","setup":"rack","cue":"elbows_up_upright_torso_full_depth","notes":"step_out_carefully"}');
+
+-- Dumbbell accessories added with home-gym conversions
+INSERT INTO exercises
+    (exercise_id, name, muscle_group, movement_plane, equipment_id,
+     is_anchor, angle_variant, weight_ceiling, mds_fallback_id, metadata)
+VALUES
+    (20, 'DB Rear Delt Fly',  'shoulder', 'isolation',  2,
+     0, NULL, 40.0, NULL,
+     '{"grip":"neutral","setup":"hip_hinge","cue":"soft_elbow_lead_with_elbow_squeeze_rear_delts","unilateral":false}'),
+
+    (21, 'Lying DB Leg Curl', 'hamstring', 'hip_hinge', 2,
+     0, NULL, 40.0, NULL,
+     '{"setup":"prone_on_bench_dumbbell_between_feet","cue":"full_rom_squeeze_at_top","unilateral":false}');
 
 -- ---------------------------------------------------------------------------
 -- Workout templates  (rolling 4-day Upper / Lower split)
@@ -212,21 +234,21 @@ INSERT INTO template_slots
     (template_id, exercise_id, slot_type, slot_order, sets_target, reps_low, reps_high, rest_seconds)
 VALUES
     (1,  1, 'anchor',    1, 4, 4,  6,  180),  -- Barbell Bench Press
-    (1,  4, 'accessory', 2, 4, 6,  8,  150),  -- Barbell Row
+    (1,  4, 'accessory', 2, 4, 6,  8,  180),  -- Barbell Row
     (1,  5, 'accessory', 3, 3, 6,  8,  150),  -- Barbell Overhead Press
-    (1, 17, 'accessory', 4, 3, 5,  8,  120),  -- Pull-up
+    (1, 18, 'accessory', 4, 3, 6, 10,  120),  -- Chin-up (underhand, full dead hang)
     (1,  7, 'accessory', 5, 3, 12, 15,  60),  -- DB Lateral Raise
-    (1, 13, 'accessory', 6, 3, 12, 15,  60);  -- DB Tricep Overhead Ext
+    (1, 13, 'accessory', 6, 3, 10, 15,  60);  -- DB Tricep Overhead Ext
 
--- Upper B: pull focus (anchor = Bench Press, lighter intensity)
+-- Upper B: pull focus
 INSERT INTO template_slots
     (template_id, exercise_id, slot_type, slot_order, sets_target, reps_low, reps_high, rest_seconds)
 VALUES
-    (2,  1, 'anchor',    1, 3, 6,  8,  180),  -- Barbell Bench Press (lighter)
-    (2, 17, 'accessory', 2, 4, 5,  8,  150),  -- Pull-up
-    (2, 11, 'accessory', 3, 3, 8,  10, 120),  -- DB Incline Press
-    (2,  8, 'accessory', 4, 3, 8,  12, 120),  -- DB Row
-    (2,  7, 'accessory', 5, 3, 12, 15,  60),  -- DB Lateral Raise
+    (2, 17, 'anchor',    1, 4, 5,  8,  180),  -- Pull-up / Weighted Pull-up
+    (2, 11, 'accessory', 2, 4, 8,  10, 150),  -- DB Incline Press
+    (2,  8, 'accessory', 3, 3, 8,  12,  90),  -- DB Row (one-arm, both sides)
+    (2, 10, 'accessory', 4, 3, 8,  10, 120),  -- DB Shoulder Press
+    (2, 20, 'accessory', 5, 3, 15, 20,  60),  -- DB Rear Delt Fly
     (2, 12, 'accessory', 6, 3, 10, 12,  60);  -- DB Curl
 
 -- Lower A: squat focus
@@ -234,9 +256,9 @@ INSERT INTO template_slots
     (template_id, exercise_id, slot_type, slot_order, sets_target, reps_low, reps_high, rest_seconds)
 VALUES
     (3,  2, 'anchor',    1, 4, 4,  6,  180),  -- Barbell Back Squat
-    (3, 14, 'accessory', 2, 3, 10, 12,  90),  -- DB Bulgarian Split Squat
-    (3, 16, 'accessory', 3, 3, 10, 12,  90),  -- DB Romanian Deadlift
-    (3, 15, 'accessory', 4, 2, 12, 12,  60);  -- DB Walking Lunge
+    (3, 19, 'accessory', 2, 3, 6, 10,  150),  -- Barbell Front Squat (clean or cross-arm grip)
+    (3, 14, 'accessory', 3, 3, 10, 12,  90),  -- DB Bulgarian Split Squat
+    (3, 21, 'accessory', 4, 3, 10, 15,  60);  -- Lying DB Leg Curl
 
 -- Lower B: hinge focus
 INSERT INTO template_slots
