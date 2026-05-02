@@ -363,9 +363,9 @@ const PROGRAMS = [
       {id:'barbell-bench-press',  equipment:'barbell',    name:'Barbell Bench Press',        targetSets:'4',targetRepRange:'4–6',  notes:'Pause 1s at chest. +2.5–5 lb if top of range hit.',restSeconds:180},
       {id:'barbell-row',          equipment:'barbell',    name:'Barbell Row',                targetSets:'4',targetRepRange:'6–8',  notes:'Double overhand, chest to bar. Control the eccentric.',restSeconds:180},
       {id:'overhead-press',       equipment:'barbell',    name:'Overhead Press',             targetSets:'3',targetRepRange:'6–8',  notes:'Full lockout. Brace hard.',restSeconds:150},
-      {id:'lat-pulldown',         equipment:'machine',    name:'Lat Pulldown',               targetSets:'3',targetRepRange:'8–10', notes:'Full stretch at top, drive elbows to hips.',restSeconds:120},
+      {id:'chin-up',               equipment:'bodyweight', name:'Chin-up',                    targetSets:'3',targetRepRange:'6–10', notes:'Underhand grip, full dead hang. Drive elbows to hips. Add load when top of range is clean.',restSeconds:120},
       {id:'db-lateral-raise',     equipment:'dumbbell',   name:'DB Lateral Raise',           targetSets:'3',targetRepRange:'12–15',notes:'Slight forward lean, lead with elbows.',restSeconds:60},
-      {id:'tricep-pushdown',      equipment:'machine',    name:'Tricep Pushdown',            targetSets:'3',targetRepRange:'12–15',notes:'Full extension, squeeze at bottom.',restSeconds:60},
+      {id:'db-overhead-tricep-extension', equipment:'dumbbell', name:'DB Overhead Tricep Extension', targetSets:'3',targetRepRange:'10–15',notes:'Single or double DB. Elbows in, full overhead ROM. Control the eccentric.',restSeconds:60},
     ]
   },
   {
@@ -374,9 +374,9 @@ const PROGRAMS = [
     exercises:[
       {id:'pull-up-weighted',     equipment:'bodyweight', name:'Pull-up / Weighted Pull-up', targetSets:'4',targetRepRange:'5–8',  notes:'Full dead hang. Add weight when top of range is clean.',restSeconds:180},
       {id:'incline-db-press',     equipment:'dumbbell',   name:'Incline DB Press',           targetSets:'4',targetRepRange:'8–10', notes:'30–45° incline. Control descent.',restSeconds:150},
-      {id:'cable-row',            equipment:'machine',    name:'Cable Row',                  targetSets:'3',targetRepRange:'10–12',notes:'Neutral grip. Full stretch, full contraction.',restSeconds:120},
+      {id:'db-row',               equipment:'dumbbell',   name:'DB Row (One-Arm)',            targetSets:'3',targetRepRange:'8–12', notes:'Brace on bench, row to hip. Full stretch at bottom, squeeze at top. Both sides.',restSeconds:90},
       {id:'db-shoulder-press',    equipment:'dumbbell',   name:'DB Shoulder Press',          targetSets:'3',targetRepRange:'8–10', notes:'Seated or standing. Full ROM.',restSeconds:120},
-      {id:'face-pull',            equipment:'machine',    name:'Face Pull',                  targetSets:'3',targetRepRange:'15–20',notes:'External rotation at end range. Light weight, high quality.',restSeconds:60},
+      {id:'db-rear-delt-fly',     equipment:'dumbbell',   name:'DB Rear Delt Fly',           targetSets:'3',targetRepRange:'15–20',notes:'Hip hinge, soft elbow bend. Lead with elbow, squeeze rear delts at top.',restSeconds:60},
       {id:'db-curl',              equipment:'dumbbell',   name:'DB Curl',                    targetSets:'3',targetRepRange:'10–12',notes:'Supinate at top. No momentum.',restSeconds:60},
     ]
   },
@@ -385,9 +385,9 @@ const PROGRAMS = [
     description:'Quad-dominant. Heavy squat pattern leads.',
     exercises:[
       {id:'barbell-back-squat',       equipment:'barbell',    name:'Barbell Back Squat',       targetSets:'4',targetRepRange:'4–6',   notes:'Full depth, brace hard. +2.5–5 lb if top of range hit.',restSeconds:180},
-      {id:'leg-press',                equipment:'machine',    name:'Leg Press',                targetSets:'3',targetRepRange:'8–10',  notes:'Feet shoulder-width. Full ROM, do not lock out hard.',restSeconds:120},
+      {id:'barbell-front-squat',      equipment:'barbell',    name:'Barbell Front Squat',      targetSets:'3',targetRepRange:'6–10',  notes:'Clean or cross-arm grip. Elbows up, upright torso, full depth. Step out of rack carefully.',restSeconds:150},
       {id:'db-bulgarian-split-squat', equipment:'dumbbell',   name:'DB Bulgarian Split Squat', targetSets:'3',targetRepRange:'10–12', notes:'Rear foot on bench. DBs in each hand.',restSeconds:90},
-      {id:'leg-curl-machine',         equipment:'machine',    name:'Leg Curl (Machine)',        targetSets:'3',targetRepRange:'10–12', notes:'Full stretch, curl to full contraction.',restSeconds:90},
+      {id:'lying-db-leg-curl',        equipment:'dumbbell',   name:'Lying DB Leg Curl',        targetSets:'3',targetRepRange:'10–15', notes:'Prone on bench, dumbbell between feet. Full ROM. Squeeze at top of curl.',restSeconds:60},
       {id:'standing-calf-raise',      equipment:'bodyweight', name:'Standing Calf Raise',       targetSets:'4',targetRepRange:'15–20', notes:'2-sec eccentric. Full ROM. 1 RIR.',restSeconds:60},
     ]
   },
@@ -1028,6 +1028,12 @@ const STARTING_WEIGHTS = {
   'db-lateral-raise':          15,
   'db-bulgarian-split-squat':  20,
   'db-walking-lunge':          20,
+  'chin-up':                    0,
+  'db-overhead-tricep-extension': 20,
+  'db-row':                    35,
+  'db-rear-delt-fly':          15,
+  'barbell-front-squat':       65,
+  'lying-db-leg-curl':         15,
 };
 
 function parseGymInput(val) {
