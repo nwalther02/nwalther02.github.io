@@ -56,11 +56,17 @@ button:active{transform:scale(.96)}
 #sync-badge.synced{color:#4ade80;border-color:rgba(74,222,128,.3)}
 #sync-badge.local{color:var(--text3);border-color:var(--border2)}
 #sync-badge.error{color:var(--red);border-color:var(--red-bg)}
+#ex-sheet{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:50;display:none;align-items:flex-end;-webkit-tap-highlight-color:transparent}
+.sheet{background:var(--surf1);border-radius:var(--r3) var(--r3) 0 0;padding:20px 16px calc(24px + var(--safe-b));width:100%;max-height:82vh;overflow-y:auto}
+.sheet-handle{width:36px;height:4px;background:var(--surf4);border-radius:2px;margin:0 auto 20px}
+.lib-row{display:flex;align-items:center;gap:10px;background:var(--surf2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;cursor:pointer;transition:var(--tr);touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.lib-row:active{background:var(--surf3);border-color:var(--volt-border)}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <div id="sync-badge">Local</div>
+<div id="ex-sheet" onclick="if(event.target===this)closeExSheet()"><div class="sheet"></div></div>
 <script>
 // ─────────────────────────────────────────────
 //  GOOGLE DRIVE PERSISTENCE MODULE
@@ -413,9 +419,10 @@ const PROGRAMS = [
 // ─────────────────────────────────────────────
 //  STATE
 // ─────────────────────────────────────────────
-const LS_SESS  = 'wl3_session';
-const LS_HIST  = 'wl3_history';
-const LS_VIEW  = 'wl3_view';
+const LS_SESS      = 'wl3_session';
+const LS_HIST      = 'wl3_history';
+const LS_VIEW      = 'wl3_view';
+const LS_EXERCISES = 'wl3_exercises';
 
 let STATE = {
   view: 'picker',       // picker | session | history | preview
@@ -680,7 +687,7 @@ function rSession() {
 ${rTimerBlock()}
 ${sess.exercises.map((ex,i) => rExercise(ex,i)).join('')}
 <div style="padding:14px 16px 0">
-  <button class="btn-primary" style="width:100%;min-height:52px;font-size:15px;letter-spacing:.05em;border-radius:var(--r3)" onclick="addExercise()">+ Add Exercise</button>
+  <button class="btn-primary" style="width:100%;min-height:52px;font-size:15px;letter-spacing:.05em;border-radius:var(--r3)" onclick="openExSheet()">+ Add Exercise</button>
 </div>
 <div style="margin:20px 16px 0;padding:14px 16px;background:var(--surf1);border-radius:var(--r2);border:1px solid var(--border)">
   <div class="label" style="margin-bottom:5px">How to use</div>
@@ -843,6 +850,138 @@ function rPreview(idx) {
     </div>
   </div>`).join('')}
 </div>`;
+}
+
+// ─────────────────────────────────────────────
+//  EXERCISE LIBRARY
+// ─────────────────────────────────────────────
+function loadCustomExercises() {
+  try { return JSON.parse(localStorage.getItem(LS_EXERCISES)) || []; } catch(e) { return []; }
+}
+function saveCustomExercises(list) {
+  try { localStorage.setItem(LS_EXERCISES, JSON.stringify(list)); } catch(e) {}
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function openExSheet() {
+  const el = document.getElementById('ex-sheet');
+  el.querySelector('.sheet').innerHTML = exSheetBody();
+  el.style.display = 'flex';
+  setTimeout(() => { const inp = document.getElementById('ex-name-inp'); if(inp) inp.focus(); }, 80);
+}
+
+function closeExSheet() {
+  document.getElementById('ex-sheet').style.display = 'none';
+}
+
+function exSheetBody() {
+  const lib = loadCustomExercises();
+  const libHtml = lib.length ? `
+    <div class="label" style="margin-bottom:8px">Saved Exercises</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:18px">
+      ${lib.map(ex => `
+      <div class="lib-row" onclick="addExFromLib('${ex.id}')">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ex.name)}</div>
+          ${ex.targetSets || ex.targetRepRange ? `<div style="font-size:12px;color:var(--text3);margin-top:2px">${[ex.targetSets && escHtml(ex.targetSets)+' sets', ex.targetRepRange && escHtml(ex.targetRepRange)+' reps'].filter(Boolean).join(' · ')}</div>` : ''}
+        </div>
+        <button class="btn-danger btn-sm" style="flex-shrink:0;min-height:40px;padding:8px 12px" onclick="event.stopPropagation();deleteLibEx('${ex.id}')">✕</button>
+      </div>`).join('')}
+    </div>
+    <div style="height:1px;background:var(--border);margin-bottom:18px"></div>` : '';
+
+  return `
+    <div class="sheet-handle"></div>
+    <div style="font-family:var(--ffc);font-size:22px;font-weight:700;margin-bottom:18px">Add Exercise</div>
+    ${libHtml}
+    <div class="label" style="margin-bottom:10px">New Exercise</div>
+    <input id="ex-name-inp" type="text" placeholder="Exercise name" autocomplete="off"
+      style="margin-bottom:10px;font-size:16px"
+      onkeydown="if(event.key==='Enter'){document.getElementById('ex-sets-inp').focus()}">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <input id="ex-sets-inp" type="text" inputmode="numeric" placeholder="Sets  (e.g. 3)"
+        style="font-size:16px"
+        onkeydown="if(event.key==='Enter'){document.getElementById('ex-reps-inp').focus()}">
+      <input id="ex-reps-inp" type="text" placeholder="Reps  (e.g. 8–12)"
+        style="font-size:16px"
+        onkeydown="if(event.key==='Enter'){submitExToSession(false)}">
+    </div>
+    <div id="ex-err" style="color:var(--red);font-size:13px;min-height:20px;margin-bottom:8px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <button class="btn-primary" style="min-height:52px;font-size:15px;letter-spacing:.03em"
+        onclick="submitExToSession(false)">Add to Session</button>
+      <button class="btn-outline" style="min-height:52px;font-size:15px"
+        onclick="submitExToSession(true)">Add + Save</button>
+    </div>
+    <button class="btn-ghost" style="width:100%;font-size:13px;color:var(--text3);min-height:44px"
+      onclick="closeExSheet();addExercise()">+ Add blank exercise instead</button>`;
+}
+
+function submitExToSession(save) {
+  const nameEl = document.getElementById('ex-name-inp');
+  const setsEl = document.getElementById('ex-sets-inp');
+  const repsEl = document.getElementById('ex-reps-inp');
+  const errEl  = document.getElementById('ex-err');
+  const name   = nameEl ? nameEl.value.trim() : '';
+
+  if (!name) {
+    if (errEl) errEl.textContent = 'Exercise name is required.';
+    if (nameEl) nameEl.focus();
+    return;
+  }
+  if (errEl) errEl.textContent = '';
+
+  const sets = setsEl ? setsEl.value.trim() : '';
+  const reps = repsEl ? repsEl.value.trim() : '';
+
+  if (save) {
+    const lib = loadCustomExercises();
+    const isDupe = lib.some(e => e.name.trim().toLowerCase() === name.toLowerCase());
+    if (!isDupe) {
+      lib.push({ id: uid(), name, targetSets: sets, targetRepRange: reps, notes: '', restSeconds: 90 });
+      saveCustomExercises(lib);
+    }
+  }
+
+  STATE.session.exercises.push({
+    id: uid(), name,
+    targetSets: sets, targetRepRange: reps,
+    notes: '', restSeconds: 90, sets: []
+  });
+  persist();
+  closeExSheet();
+  render();
+  setTimeout(() => {
+    const cards = document.querySelectorAll('[data-exid]');
+    if (cards.length) { const inp = cards[cards.length-1].querySelector('input'); if(inp) inp.focus(); }
+  }, 80);
+}
+
+function addExFromLib(id) {
+  const ex = loadCustomExercises().find(e => e.id === id);
+  if (!ex || !STATE.session) return;
+  STATE.session.exercises.push({
+    id: uid(), name: ex.name,
+    targetSets: ex.targetSets, targetRepRange: ex.targetRepRange,
+    notes: ex.notes || '', restSeconds: ex.restSeconds || 90, sets: []
+  });
+  persist();
+  closeExSheet();
+  render();
+  vibrate(50);
+}
+
+function deleteLibEx(id) {
+  saveCustomExercises(loadCustomExercises().filter(e => e.id !== id));
+  // Refresh sheet in-place without closing
+  const el = document.getElementById('ex-sheet');
+  if (el && el.style.display !== 'none') {
+    el.querySelector('.sheet').innerHTML = exSheetBody();
+    setTimeout(() => { const inp = document.getElementById('ex-name-inp'); if(inp) inp.focus(); }, 50);
+  }
 }
 
 // ─────────────────────────────────────────────
