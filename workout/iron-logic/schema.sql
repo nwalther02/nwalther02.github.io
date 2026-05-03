@@ -12,9 +12,9 @@ PRAGMA journal_mode  = WAL;
 -- Technique lookup
 -- ---------------------------------------------------------------------------
 -- Separates raw external load (weight_lbs) from effective stimulus modifier.
--- A 40 lb Tempo set and a 40 lb Standard set share identical weight_lbs but
--- differ in technique_id.  Progression logic reads technique_id to determine
--- which virtual_weight_lbs lineage to follow — they are NOT interchangeable.
+-- technique_id is logged metadata only — it is NOT a lineage discriminator.
+-- Progression history is keyed by exercise_id alone; technique is derived
+-- from (virtual_weight_lbs - weight_ceiling) on every prescription call.
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS techniques (
     technique_id    INTEGER PRIMARY KEY,

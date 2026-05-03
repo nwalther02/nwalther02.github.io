@@ -25,7 +25,9 @@ Defines how a set is performed and its relative time-under-tension vs a Standard
 | 3 | Myo-reps | 1.6 |
 | 4 | Mechanical_Drop_Set | 1.8 |
 
-A 40 lb Tempo set and a 40 lb Standard set share the same `weight_lbs` but carry different `technique_id` values and therefore belong to separate progression lineages.
+A 40 lb Tempo set and a 40 lb Standard set for the same exercise share one progression lineage. Technique is a phase label derived from `virtual_weight_lbs − weight_ceiling` on every prescription call; it is not a lineage discriminator. The stored `technique` value in `set_log` is the logged outcome for reference only.
+
+**Lineage identity** — For all exercises, progression history is keyed by `exercise_id` alone. The JS app does not store or filter by `technique_id` in history. Users who want independent Standard and Tempo progression tracks for the same movement must register them as distinct exercises with distinct IDs.
 
 #### `equipment_types`
 `barbell` (1) · `dumbbell` (2) · `bodyweight` (3)
