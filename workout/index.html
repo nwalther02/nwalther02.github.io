@@ -50,7 +50,7 @@
   }
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--ff);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
-#app{max-width:560px;margin:0 auto;padding-bottom:calc(64px + var(--safe-b));min-height:100dvh}
+#app{max-width:560px;margin:0 auto;padding-bottom:calc(max(12px,var(--safe-b)) + 8px);min-height:100dvh}
 input,textarea,select{background:var(--surf3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r);padding:11px 13px;font-size:16px;font-family:var(--ff);width:100%;outline:none;transition:var(--tr);-webkit-appearance:none;}
 input:focus,textarea:focus{border-color:var(--volt);background:var(--surf4);box-shadow:0 0 0 3px var(--volt-subtle)}
 input::placeholder,textarea::placeholder{color:var(--text3)}
@@ -665,18 +665,18 @@ function rPicker() {
     <button class="btn-sm btn-primary" onclick="STATE.view='session';render()">Resume →</button>
   </div>` : ''}
 </div>
-<div style="padding:16px">
+<div style="padding:12px">
   ${rNextWorkoutBanner()}
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
     ${PROGRAMS.map(p => `
-    <div onclick="loadProgram('${p.id}')" style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r3);padding:16px;cursor:pointer;transition:var(--tr);position:relative;overflow:hidden" onmouseenter="this.style.borderColor='var(--volt-border)';this.style.background='var(--surf3)'" onmouseleave="this.style.borderColor='var(--border)';this.style.background='var(--surf2)'" ontouchstart="this.style.borderColor='var(--volt-border)';this.style.background='var(--surf3)'" ontouchend="this.style.borderColor='var(--border)';this.style.background='var(--surf2)'">
+    <div onclick="loadProgram('${p.id}')" style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r3);padding:14px;cursor:pointer;transition:var(--tr);position:relative;overflow:hidden;min-height:124px;display:flex;flex-direction:column" onmouseenter="this.style.borderColor='var(--volt-border)';this.style.background='var(--surf3)'" onmouseleave="this.style.borderColor='var(--border)';this.style.background='var(--surf2)'" ontouchstart="this.style.borderColor='var(--volt-border)';this.style.background='var(--surf3)'" ontouchend="this.style.borderColor='var(--border)';this.style.background='var(--surf2)'">
       <div style="font-family:var(--ffc);font-size:28px;font-weight:700;color:var(--volt);line-height:1;margin-bottom:4px">${p.label}</div>
       <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">${p.tag}</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:10px">${p.description}</div>
-      <div style="font-size:11px;color:var(--text3)">${p.exercises.length} exercises</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${p.description}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:auto">${p.exercises.length} exercises</div>
     </div>`).join('')}
   </div>
-  <button class="btn-outline btn-sm" style="width:100%;margin-top:12px" onclick="loadBlank()">+ Start blank session</button>
+  <button class="btn-outline" style="width:100%;margin-top:12px;min-height:44px;font-size:13px;padding:10px 16px" onclick="loadBlank()">+ Start blank session</button>
 </div>`;
 }
 
@@ -1254,7 +1254,7 @@ function rNextWorkoutBanner() {
   const nextId   = getNextProgramId();
   const nextProg = PROGRAMS.find(p => p.id === nextId);
   if (!nextProg) return '';
-  return `<div style="margin-bottom:14px;background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:var(--r2);padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+  return `<div style="margin-bottom:10px;min-height:72px;background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:var(--r2);padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
     <div>
       <div style="font-size:11px;color:var(--volt);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">Up Next</div>
       <div style="font-size:14px;font-weight:600">${nextProg.label} <span style="font-weight:400;color:var(--text2)">· ${nextProg.tag}</span></div>
