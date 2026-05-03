@@ -19,6 +19,14 @@
 - Bottom sheet becomes a centered 480 px modal at this breakpoint (CSS only — no JS change)
 - Rail buttons receive `.rail-active` class to highlight the active view; updated after each `render()` call
 
+**Select Program picker — mobile layout polish**
+- Container padding reduced to 12 px (was 16 px) to give each card column more breathing room on narrow screens
+- Program cards: `min-height: 124px`, padding reduced to 14 px, `display:flex;flex-direction:column` so the exercise count badge pins to the bottom edge regardless of description length
+- Description text clamped to 2 lines via `-webkit-line-clamp:2`, keeping all cards the same height in the grid
+- Up Next banner: `min-height: 72px` hero strip height and `margin-bottom: 10px` (was 14 px)
+- "Start blank session" button: promoted from `.btn-sm` to full-height button with `min-height: 44px`, meeting the 44 px touch-target recommendation
+- `#app` `padding-bottom` switched to `calc(max(12px, var(--safe-b)) + 8px)` — removes the 64 px ghost space that the bottom nav-bar was leaving on the picker screen
+
 ### Fixed
 
 **T1 — Data integrity**
@@ -39,7 +47,7 @@
 - `runMigration()` catch block: `LS_SCHEMA_V1` is now set to `'error'` on failure, preventing the migration from re-running on every boot when corrupted `localStorage` causes a throw
 
 ### Files changed
-- `workout/index.html` — CSS token layer, dynamic viewport units, safe-area tokens, view transitions, desktop rail layout, bottom-sheet modal, T1–T5 patches
+- `workout/index.html` — CSS token layer, dynamic viewport units, safe-area tokens, view transitions, desktop rail layout, bottom-sheet modal, Select Program picker layout polish, T1–T5 patches
 
 ---
 
