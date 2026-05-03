@@ -27,7 +27,23 @@
 - "Start blank session" button: promoted from `.btn-sm` to full-height button with `min-height: 44px`, meeting the 44 px touch-target recommendation
 - `#app` `padding-bottom` switched to `calc(max(12px, var(--safe-b)) + 8px)` — removes the 64 px ghost space that the bottom nav-bar was leaving on the picker screen
 
+**Export / Import UI clarification (PR #44)**
+- In-session export button renamed **Export Session CSV**; a muted 10 px helper line "Spreadsheet only · not importable" added beneath it — tooltip-only explanation was invisible on touch devices
+- History export renamed **Export Backup (JSON)**; import renamed **Import Backup**
+- History header gains a helper line "JSON = full backup & restore · CSV = spreadsheet export only, not importable"
+- "How to use" card text updated to reference both buttons by their new names
+
+**Iron Logic documentation correction (PR #44)**
+- `workout/iron-logic/README.md` and `schema.sql`: corrected technique lineage description — `technique_id` is logged metadata only and is not a lineage discriminator; progression history is keyed by `exercise_id` alone; independent Standard/Tempo lineages require distinct exercise IDs
+
 ### Fixed
+
+**T6 — Dumbbell virtual weight lineage guards (PR #42)**
+- `computeProgression()`: replaced `?? weight` null-coalesce with an explicit `!= null && > 0` guard when reading `exercise.virtualWeight`; a stored value of `0` (bodyweight starting weight such as Chin-up) now falls back to the logged weight instead of locking progression at zero virtual weight
+- `finalizeSessionExercises()`: when the re-anchor threshold is exceeded and the user logged at the DB ceiling (39.5–40.5 lb), `suggestion.virtualWeight` is now preserved rather than collapsing to the logged actual weight — prevents a technique regression loop for ceiling-bound exercises that correctly hit the dumbbell cap
+
+**Modal backdrop fallback**
+- `#ex-sheet` backdrop now declares `background:rgba(0,0,0,.65)` before the `oklch(0% 0 0 / 65%)` value; browsers without OKLCH support retain the dimmed scrim instead of showing a transparent overlay
 
 **T1 — Data integrity**
 - `submitExToSession()`: `equipment` field is now included when saving custom exercises to the `wl3_exercises` library key; previously, exercises saved without it silently defaulted to `dumbbell` on re-read
@@ -46,8 +62,15 @@
 **T5 — Migration retry guard**
 - `runMigration()` catch block: `LS_SCHEMA_V1` is now set to `'error'` on failure, preventing the migration from re-running on every boot when corrupted `localStorage` causes a throw
 
+**T7 — Input validation hardening (PR #44)**
+- `parseGymInput()`: rejects comma-decimal inputs (e.g., `"50,5"` would silently become 505); rejects `kg` suffix (app is lb-only); rejects negative values — all three previously returned a nonsensical number
+- `computeProgression()`: returns `null` for zero-weight non-bodyweight sets (avoids silently progressing from an un-entered weight of 0)
+- `computeProgression()`: `newVirtual` is capped at `BARBELL_MAX` (1000 lb) before snapping — prevents unbounded virtual weight accumulation on long-running barbell lineages
+
 ### Files changed
-- `workout/index.html` — CSS token layer, dynamic viewport units, safe-area tokens, view transitions, desktop rail layout, bottom-sheet modal, Select Program picker layout polish, T1–T5 patches
+- `workout/index.html` — CSS token layer, dynamic viewport units, safe-area tokens, view transitions, desktop rail layout, bottom-sheet modal, Select Program picker layout polish, T1–T7 patches, export/import UI clarification
+- `workout/iron-logic/README.md` — technique lineage description corrected
+- `workout/iron-logic/schema.sql` — technique lineage comment corrected
 
 ---
 
