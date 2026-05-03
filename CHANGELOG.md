@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- `computeProgression()`: `isRepTarget` is now gated on a successful progression attempt — it is only `true` when `rpe ≤ 8` (or null) and the snapped weight didn't change. Sessions where load is intentionally held (`rpe > 8`) no longer surface the misleading "target +1 rep" cue.
+- `rSuggestionHint()`: renders "Hold ~X lb — target +1 rep" when `isRepTarget` is true; shows the standard "Suggested: ~X lb" hint otherwise.
+
 ## v1.1.0 — 2026-03-22 · Milestone 2: Second Code Push (Refinement)
 
 This milestone marks the second code push following the initial Now Playing cards launch. It captures the polish pass applied after the v1.0.0 release and locks in the current site state as a stable, reviewed baseline.

@@ -1095,17 +1095,20 @@ function computeProgression(lastRecord, equipment, exerciseId) {
   const rpe    = parseGymInput(set.rpe);
   if (weight === null) return null;
 
-  const prevVirtual = parseGymInput(exercise.virtualWeight) ?? weight;
-  const newVirtual  = (rpe === null || rpe <= 8) ? prevVirtual * 1.025 : prevVirtual;
+  const prevVirtual          = parseGymInput(exercise.virtualWeight) ?? weight;
+  const progressionAttempted = (rpe === null || rpe <= 8);
+  const newVirtual           = progressionAttempted ? prevVirtual * 1.025 : prevVirtual;
 
   if (equipment === 'dumbbell') {
     const gap = newVirtual - DB_CEILING;
     if (gap > 0) {
       let technique = gap < 5 ? 'Tempo 3-1-1-0' : gap <= 15 ? 'Myo-reps' : 'Myo-reps+';
-      return { suggestedWeight: snapWeight(Math.min(newVirtual, DB_CEILING), equipment), virtualWeight: newVirtual, technique, hint: null };
+      return { suggestedWeight: snapWeight(Math.min(newVirtual, DB_CEILING), equipment), virtualWeight: newVirtual, technique, hint: null, isRepTarget: false };
     }
   }
-  return { suggestedWeight: snapWeight(newVirtual, equipment), virtualWeight: newVirtual, technique: null, hint: null };
+  const prevSnapped = snapWeight(prevVirtual, equipment);
+  const snapped     = snapWeight(newVirtual, equipment);
+  return { suggestedWeight: snapped, virtualWeight: newVirtual, technique: null, hint: null, isRepTarget: progressionAttempted && snapped === prevSnapped };
 }
 
 // Mutates each session exercise with suggestion + matchStatus.
@@ -1133,6 +1136,9 @@ function rSuggestionHint(ex) {
   }
   const s = ex.suggestion;
   if (!s) return '';
+  if (s.isRepTarget) {
+    return `<div style="margin-top:6px;font-size:12px;color:var(--text2)">Hold <span style="font-weight:700;color:var(--text)">~${s.suggestedWeight} lb</span> <span style="color:var(--text3)">— target +1 rep</span></div>`;
+  }
   const tag  = s.technique ? `<span style="margin-left:6px;font-size:10px;color:var(--volt);background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:4px;padding:1px 6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">${s.technique}</span>` : '';
   const hint = s.hint ? `<span style="color:var(--text3)"> · ${s.hint}</span>` : '';
   return `<div style="margin-top:6px;font-size:12px;color:var(--text2)">Suggested: <span style="font-weight:700;color:var(--text)">~${s.suggestedWeight} lb</span>${tag}${hint}</div>`;
