@@ -512,9 +512,10 @@ function hydrate() {
     if (hist) STATE.history = JSON.parse(hist) || [];
     if (raw) {
       const d = JSON.parse(raw);
-      // Only restore an active in-progress session
-      if (d.session && d.session.startedAt && !d.session.endedAt) {
-        STATE.session = d.session;
+      // Restore started-but-unfinished sessions, or unstarted drafts that have exercises
+      const s = d.session;
+      if (s && !s.endedAt && (s.startedAt || (s.exercises && s.exercises.length > 0))) {
+        STATE.session = s;
         STATE.view = 'session';
         return;
       }
@@ -823,7 +824,6 @@ function rExercise(ex, idx) {
           <input placeholder="Sets" value="${ex.targetSets||''}" style="font-size:13px;padding:7px 10px;width:65px;flex:none" oninput="STATE.session.exercises[${exIdx}].targetSets=this.value;persist()">
           <input placeholder="Rep range" value="${ex.targetRepRange||''}" style="font-size:13px;padding:7px 10px;flex:1;min-width:0" oninput="STATE.session.exercises[${exIdx}].targetRepRange=this.value;persist()">
         </div>
-        ${rSuggestionHint(ex)}
         ${ex.notes ? `<div style="margin-top:9px;font-size:12px;color:var(--text3);line-height:1.55;padding:8px 11px;background:var(--surf3);border-radius:7px;border-left:2px solid var(--volt-border)">${ex.notes}</div>` : ''}
       </div>
       <button class="btn-ghost btn-danger btn-sm" style="padding:6px;min-height:auto;font-size:13px;flex-shrink:0" onclick="removeEx('${ex.id}')">✕</button>
@@ -837,9 +837,10 @@ function rExercise(ex, idx) {
     </div>` : ''}
   </div>
   <div style="background:var(--bg)">
-    <div style="display:grid;grid-template-columns:24px 1fr 1fr 50px 30px 26px;gap:4px;padding:7px 14px;border-bottom:1px solid var(--border)">
+    <div style="display:grid;grid-template-columns:24px 1fr 1fr 50px 30px 26px;gap:4px;padding:7px 14px;border-bottom:${(ex.matchStatus==='fallback-unresolved'||ex.suggestion)?'none':'1px solid var(--border)'}">
       ${['#','Wt','Reps','RPE','',''].map(l=>`<span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)">${l}</span>`).join('')}
     </div>
+    ${(ex.matchStatus==='fallback-unresolved'||ex.suggestion) ? `<div style="padding:0 14px 8px;border-bottom:1px solid var(--border)">${rSuggestionHint(ex)}</div>` : ''}
     ${ex.sets.map((set,si) => `
     <div style="display:grid;grid-template-columns:24px 1fr 1fr 50px 30px 26px;gap:4px;align-items:center;padding:5px 14px;border-bottom:1px solid var(--border);background:${set.completed?'var(--volt-subtle)':'transparent'};transition:background .2s">
       <span style="font-family:var(--ffc);font-size:13px;font-weight:700;color:${set.completed?'var(--volt)':'var(--text3)'}">${set.setNumber}</span>
@@ -1015,7 +1016,7 @@ function submitExToSession(save) {
     const lib = loadCustomExercises();
     const isDupe = lib.some(e => e.name.trim().toLowerCase() === name.toLowerCase());
     if (!isDupe) {
-      lib.push({ id: uid(), name, targetSets: sets, targetRepRange: reps, notes: '', restSeconds: 90 });
+      lib.push({ id: uid(), name, targetSets: sets, targetRepRange: reps, notes: '', restSeconds: 90, equipment: 'dumbbell' });
       saveCustomExercises(lib);
     }
   }
@@ -1108,8 +1109,10 @@ function parseGymInput(val) {
 
 function normalizeExerciseName(name) {
   return String(name).trim().toLowerCase()
-    .replace(/-/g, ' ').replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim()
-    .replace(/\s/g, '-');
+    .replace(/[^\w\s-]/g, ' ')  // remove non-word-non-hyphen chars (parens, slashes); keep hyphens
+    .replace(/\s+/g, '-')        // spaces → hyphens
+    .replace(/-+/g, '-')         // collapse multiple hyphens
+    .replace(/^-|-$/g, '');      // strip leading/trailing hyphens
 }
 
 function snapWeight(val, equipment) {
@@ -1163,14 +1166,18 @@ function computeProgression(lastRecord, equipment, exerciseId) {
   const prevVirtual = parseGymInput(exercise.virtualWeight) ?? weight;
   const newVirtual  = (rpe === null || rpe <= 8) ? prevVirtual * 1.025 : prevVirtual;
 
+  const prevSnapped = snapWeight(weight, equipment);
+
   if (equipment === 'dumbbell') {
     const gap = newVirtual - DB_CEILING;
     if (gap > 0) {
       let technique = gap < 5 ? 'Tempo 3-1-1-0' : gap <= 15 ? 'Myo-reps' : 'Myo-reps+';
-      return { suggestedWeight: snapWeight(Math.min(newVirtual, DB_CEILING), equipment), virtualWeight: newVirtual, technique, hint: null };
+      return { suggestedWeight: snapWeight(Math.min(newVirtual, DB_CEILING), equipment), virtualWeight: newVirtual, technique, hint: null, isRepTarget: false };
     }
   }
-  return { suggestedWeight: snapWeight(newVirtual, equipment), virtualWeight: newVirtual, technique: null, hint: null };
+
+  const snapped = snapWeight(newVirtual, equipment);
+  return { suggestedWeight: snapped, virtualWeight: newVirtual, technique: null, hint: null, isRepTarget: snapped === prevSnapped };
 }
 
 // Mutates each session exercise with suggestion + matchStatus.
@@ -1198,6 +1205,9 @@ function rSuggestionHint(ex) {
   }
   const s = ex.suggestion;
   if (!s) return '';
+  if (s.isRepTarget) {
+    return `<div style="margin-top:6px;font-size:12px;color:var(--text2)">Hold <span style="font-weight:700;color:var(--text)">~${s.suggestedWeight} lb</span> <span style="color:var(--text3)">— target +1 rep</span></div>`;
+  }
   const tag  = s.technique ? `<span style="margin-left:6px;font-size:10px;color:var(--volt);background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:4px;padding:1px 6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">${s.technique}</span>` : '';
   const hint = s.hint ? `<span style="color:var(--text3)"> · ${s.hint}</span>` : '';
   return `<div style="margin-top:6px;font-size:12px;color:var(--text2)">Suggested: <span style="font-weight:700;color:var(--text)">~${s.suggestedWeight} lb</span>${tag}${hint}</div>`;
@@ -1311,6 +1321,7 @@ function runMigration() {
     console.log('[Iron Logic] Migration applied successfully.');
   } catch(e) {
     console.warn('[Iron Logic] Migration error:', e);
+    try { localStorage.setItem(LS_SCHEMA_V1, 'error'); } catch(_) {}
   }
 }
 
