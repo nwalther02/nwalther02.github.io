@@ -725,8 +725,11 @@ function rSession() {
 <div class="sticky-header">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <button class="btn-ghost btn-sm" onclick="STATE.view='picker';render()" style="padding:6px 10px">← Programs</button>
-    <div style="display:flex;gap:6px">
-      <button class="btn-sm btn-outline" onclick="exportCSV(STATE.session)">Export CSV</button>
+    <div style="display:flex;gap:6px;align-items:flex-start">
+      <div style="text-align:right">
+        <button class="btn-sm btn-outline" onclick="exportCSV(STATE.session)" title="Spreadsheet export only — not importable">Export Session CSV</button>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">Spreadsheet only · not importable</div>
+      </div>
       <button class="btn-sm btn-outline" onclick="goHistory()">History</button>
     </div>
   </div>
@@ -758,7 +761,7 @@ ${sess.exercises.map((ex,i) => rExercise(ex,i)).join('')}
 </div>
 <div style="margin:20px 16px 0;padding:14px 16px;background:var(--surf1);border-radius:var(--r2);border:1px solid var(--border)">
   <div class="label" style="margin-bottom:5px">How to use</div>
-  <div style="font-size:12px;color:var(--text2);line-height:1.7">Log weight + reps → tap checkbox to mark set done → start rest timer → repeat. Tap Export CSV to save your data. Session auto-saves continuously.</div>
+  <div style="font-size:12px;color:var(--text2);line-height:1.7">Log weight + reps → tap checkbox to mark set done → start rest timer → repeat. Session auto-saves continuously. Use <strong>Export Session CSV</strong> for spreadsheet use. Use <strong>Export Backup (JSON)</strong> in History to save and restore all your data.</div>
 </div>`;
 }
 
@@ -868,13 +871,14 @@ function rHistory() {
     <button class="btn-ghost btn-sm" onclick="STATE.view='picker';render()" style="padding:6px 10px">← Programs</button>
     <span class="label">Session History</span>
     <div style="margin-left:auto;display:flex;gap:6px">
-      <button class="btn-sm btn-outline" onclick="exportBackup()" title="Download full backup JSON">Export</button>
+      <button class="btn-sm btn-outline" onclick="exportBackup()" title="Download full backup JSON">Export Backup (JSON)</button>
       <label class="btn-sm btn-outline" style="cursor:pointer;display:inline-flex;align-items:center;padding:8px 12px;font-size:12px;min-height:38px;border-radius:8px;border:1px solid var(--border2);color:var(--text2);background:transparent" title="Restore from backup JSON">
-        Import
+        Import Backup
         <input type="file" accept="application/json" style="display:none" onchange="importBackup(event)">
       </label>
     </div>
   </div>
+  <div style="padding:6px 0 2px;font-size:11px;color:var(--text3)">JSON = full backup &amp; restore · CSV = spreadsheet export only, not importable</div>
 </div>
 <div style="padding:14px 16px">
   ${hist.length===0 ? `<div style="color:var(--text3);font-size:14px;padding:32px 0;text-align:center">No saved sessions yet.<br><span style="font-size:12px">Complete a session to see it here.</span></div>` : ''}
@@ -911,7 +915,10 @@ function rPreview(idx) {
         <span class="pill">${totalCompletedSets(h)} sets logged</span>
       </div>
     </div>
-    <button class="btn-sm btn-outline" onclick="exportCSV(STATE.history[${idx}])">Export CSV</button>
+    <div style="text-align:right">
+      <button class="btn-sm btn-outline" onclick="exportCSV(STATE.history[${idx}])">Export Session CSV</button>
+      <div style="font-size:10px;color:var(--text3);margin-top:3px">Spreadsheet only · not importable</div>
+    </div>
   </div>
 </div>
 <div style="padding:14px 16px">
@@ -1081,6 +1088,7 @@ function deleteLibEx(id) {
 //  IRON LOGIC — PROGRESSION ENGINE
 // ─────────────────────────────────────────────
 const DB_CEILING       = 40;
+const BARBELL_MAX      = 1000;
 const STARTING_WEIGHTS = {
   'barbell-bench-press':       95,
   'barbell-row':               95,
@@ -1103,8 +1111,11 @@ const STARTING_WEIGHTS = {
 };
 
 function parseGymInput(val) {
-  const n = parseFloat(String(val).replace(/[^\d.]/g, ''));
-  return isNaN(n) ? null : n;
+  const s = String(val).trim();
+  if (/,/.test(s)) return null;       // reject comma-decimal (e.g. "50,5" → would become 505)
+  if (/kg/i.test(s)) return null;     // reject kg suffix (app is lb-only)
+  const n = parseFloat(s.replace(/[^\d.-]/g, ''));
+  return (isNaN(n) || n < 0) ? null : n;
 }
 
 function normalizeExerciseName(name) {
@@ -1162,6 +1173,7 @@ function computeProgression(lastRecord, equipment, exerciseId) {
   const weight = parseGymInput(set.weight);
   const rpe    = parseGymInput(set.rpe);
   if (weight === null) return null;
+  if (weight <= 0 && equipment !== 'bodyweight') return null;
 
   const parsedVirtual = parseGymInput(exercise.virtualWeight);
   const prevVirtual = (parsedVirtual !== null && parsedVirtual > 0) ? parsedVirtual : weight;
@@ -1177,7 +1189,7 @@ function computeProgression(lastRecord, equipment, exerciseId) {
     }
   }
 
-  const snapped = snapWeight(newVirtual, equipment);
+  const snapped = snapWeight(Math.min(newVirtual, BARBELL_MAX), equipment);
   return { suggestedWeight: snapped, virtualWeight: newVirtual, technique: null, hint: null, isRepTarget: snapped === prevSnapped };
 }
 
