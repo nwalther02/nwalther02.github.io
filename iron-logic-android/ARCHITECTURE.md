@@ -128,3 +128,39 @@ the state with fake business data.
 
 **Fix:** Default is `null`. The domain loads the real advisory target in
 `SessionViewModel.init {}`.
+
+---
+
+## Additional Hardening (Post Codex Review)
+
+### 5. Cancel-Finish Race Condition
+
+**Problem:** The original `ConfirmFinish` guard was `phase == COMPLETE`, so if
+`CancelFinish` reset the phase to `ACTIVE`, the auto-confirm coroutine still
+fired and incorrectly moved the session to `COMPLETE`.
+
+**Fix:**
+- `ConfirmFinish` guard changed to `phase != FINISHING` — the intent is a
+  no-op in every phase except `FINISHING`.
+- `finishConfirmJob: Job?` stored on the ViewModel. `CancelFinish` cancels it
+  before updating state, eliminating the race window entirely.
+
+### 6. Restore Prior Phase on Undo
+
+**Problem:** `CancelFinish` always returned to `ACTIVE`. If the finish gesture
+fired during `RESTING`, the rest timer and its `restEndsAtElapsedMs` epoch were
+still valid but the phase was wrong.
+
+**Fix:** `phaseBeforeFinishing: SessionPhase?` added to `SessionUiState`.
+Captured in `RequestFinishSession`, consumed in `CancelFinish` to restore the
+exact prior phase (`ACTIVE` or `RESTING`).
+
+### 7. Main-Thread I/O
+
+**Problem:** `domain.logSet()` and `domain.markSessionComplete()` imply durable
+SQLite writes but were called synchronously on the main thread inside
+`processIntent`, risking UI jank.
+
+**Fix:** Both calls wrapped in `withContext(Dispatchers.IO)` inside a
+`viewModelScope.launch {}` block. State updates and `WorkManager.enqueueUniqueWork()`
+remain on the main dispatcher.
