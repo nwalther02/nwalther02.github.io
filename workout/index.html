@@ -1081,6 +1081,7 @@ function deleteLibEx(id) {
 //  IRON LOGIC — PROGRESSION ENGINE
 // ─────────────────────────────────────────────
 const DB_CEILING       = 40;
+const BARBELL_MAX      = 1000;
 const STARTING_WEIGHTS = {
   'barbell-bench-press':       95,
   'barbell-row':               95,
@@ -1103,8 +1104,8 @@ const STARTING_WEIGHTS = {
 };
 
 function parseGymInput(val) {
-  const n = parseFloat(String(val).replace(/[^\d.]/g, ''));
-  return isNaN(n) ? null : n;
+  const n = parseFloat(String(val).replace(/[^\d.-]/g, ''));
+  return (isNaN(n) || n < 0) ? null : n;
 }
 
 function normalizeExerciseName(name) {
@@ -1162,6 +1163,7 @@ function computeProgression(lastRecord, equipment, exerciseId) {
   const weight = parseGymInput(set.weight);
   const rpe    = parseGymInput(set.rpe);
   if (weight === null) return null;
+  if (weight <= 0 && equipment !== 'bodyweight') return null;
 
   const parsedVirtual = parseGymInput(exercise.virtualWeight);
   const prevVirtual = (parsedVirtual !== null && parsedVirtual > 0) ? parsedVirtual : weight;
@@ -1177,7 +1179,7 @@ function computeProgression(lastRecord, equipment, exerciseId) {
     }
   }
 
-  const snapped = snapWeight(newVirtual, equipment);
+  const snapped = snapWeight(Math.min(newVirtual, BARBELL_MAX), equipment);
   return { suggestedWeight: snapped, virtualWeight: newVirtual, technique: null, hint: null, isRepTarget: snapped === prevSnapped };
 }
 
