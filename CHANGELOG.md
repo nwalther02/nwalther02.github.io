@@ -29,6 +29,9 @@
 
 ### Fixed
 
+**Modal backdrop fallback**
+- `#ex-sheet` backdrop now declares `background:rgba(0,0,0,.65)` before the `oklch(0% 0 0 / 65%)` value; browsers without OKLCH support retain the dimmed scrim instead of showing a transparent overlay
+
 **T1 — Data integrity**
 - `submitExToSession()`: `equipment` field is now included when saving custom exercises to the `wl3_exercises` library key; previously, exercises saved without it silently defaulted to `dumbbell` on re-read
 - `hydrate()`: session drafts with exercises are now restored even when `startedAt` is not yet set; unstarted drafts that already contained exercise entries were previously silently lost on page refresh
