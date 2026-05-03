@@ -1104,7 +1104,10 @@ const STARTING_WEIGHTS = {
 };
 
 function parseGymInput(val) {
-  const n = parseFloat(String(val).replace(/[^\d.-]/g, ''));
+  const s = String(val).trim();
+  if (/,/.test(s)) return null;       // reject comma-decimal (e.g. "50,5" → would become 505)
+  if (/kg/i.test(s)) return null;     // reject kg suffix (app is lb-only)
+  const n = parseFloat(s.replace(/[^\d.-]/g, ''));
   return (isNaN(n) || n < 0) ? null : n;
 }
 
