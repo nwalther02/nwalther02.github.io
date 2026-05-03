@@ -1163,7 +1163,8 @@ function computeProgression(lastRecord, equipment, exerciseId) {
   const rpe    = parseGymInput(set.rpe);
   if (weight === null) return null;
 
-  const prevVirtual = parseGymInput(exercise.virtualWeight) ?? weight;
+  const parsedVirtual = parseGymInput(exercise.virtualWeight);
+  const prevVirtual = (parsedVirtual !== null && parsedVirtual > 0) ? parsedVirtual : weight;
   const newVirtual  = (rpe === null || rpe <= 8) ? prevVirtual * 1.025 : prevVirtual;
 
   const prevSnapped = snapWeight(weight, equipment);
@@ -1223,8 +1224,15 @@ function finalizeSessionExercises(sess) {
     if (logged === null) return;
     const suggested = ex.suggestion ? ex.suggestion.suggestedWeight : null;
     if (suggested !== null && Math.abs(logged - suggested) > Math.max(suggested * 0.10, 5.0)) {
-      ex.virtualWeight = logged;
-      ex.wasReanchored = true;
+      const atCeiling = ex.equipment === 'dumbbell' &&
+        logged >= DB_CEILING - 0.5 && logged <= DB_CEILING + 0.5;
+      if (atCeiling && ex.suggestion && ex.suggestion.virtualWeight != null) {
+        ex.virtualWeight = ex.suggestion.virtualWeight;
+        ex.wasReanchored = false;
+      } else {
+        ex.virtualWeight = logged;
+        ex.wasReanchored = true;
+      }
     }
     if (ex.virtualWeight == null) ex.virtualWeight = logged;
   });
