@@ -1082,12 +1082,12 @@ function getLastSet(exerciseId, normalizedSlug, history) {
   return null;
 }
 
-// Returns { suggestedWeight, virtualWeight, technique, hint } or null.
+// Returns { suggestedWeight, virtualWeight, technique, hint, progressionAttempted } or null.
 function computeProgression(lastRecord, equipment, exerciseId) {
   if (!lastRecord) {
     const startW = STARTING_WEIGHTS[exerciseId] ?? null;
     return startW !== null
-      ? { suggestedWeight: startW, virtualWeight: startW, technique: null, hint: 'Starting weight' }
+      ? { suggestedWeight: startW, virtualWeight: startW, technique: null, hint: 'Starting weight', progressionAttempted: false }
       : null;
   }
   const { set, exercise } = lastRecord;
@@ -1096,16 +1096,17 @@ function computeProgression(lastRecord, equipment, exerciseId) {
   if (weight === null) return null;
 
   const prevVirtual = parseGymInput(exercise.virtualWeight) ?? weight;
-  const newVirtual  = (rpe === null || rpe <= 8) ? prevVirtual * 1.025 : prevVirtual;
+  const progressionAttempted = (rpe === null || rpe <= 8);
+  const newVirtual  = progressionAttempted ? prevVirtual * 1.025 : prevVirtual;
 
   if (equipment === 'dumbbell') {
     const gap = newVirtual - DB_CEILING;
     if (gap > 0) {
       let technique = gap < 5 ? 'Tempo 3-1-1-0' : gap <= 15 ? 'Myo-reps' : 'Myo-reps+';
-      return { suggestedWeight: snapWeight(Math.min(newVirtual, DB_CEILING), equipment), virtualWeight: newVirtual, technique, hint: null };
+      return { suggestedWeight: snapWeight(Math.min(newVirtual, DB_CEILING), equipment), virtualWeight: newVirtual, technique, hint: null, progressionAttempted };
     }
   }
-  return { suggestedWeight: snapWeight(newVirtual, equipment), virtualWeight: newVirtual, technique: null, hint: null };
+  return { suggestedWeight: snapWeight(newVirtual, equipment), virtualWeight: newVirtual, technique: null, hint: null, progressionAttempted };
 }
 
 // Mutates each session exercise with suggestion + matchStatus.
