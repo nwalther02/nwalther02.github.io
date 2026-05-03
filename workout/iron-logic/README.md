@@ -31,7 +31,7 @@ A 40 lb Tempo set and a 40 lb Standard set share the same `weight_lbs` but carry
 `barbell` (1) · `dumbbell` (2) · `bodyweight` (3)
 
 #### `exercises`
-18 exercises — 2 anchor barbell lifts, 4 barbell accessories, 10 dumbbell accessories, 2 bodyweight.
+21 exercises — 2 anchor barbell lifts, 5 barbell accessories, 12 dumbbell accessories, 2 bodyweight.
 
 Key columns:
 
@@ -52,6 +52,20 @@ Four template days in a rolling split:
 
 #### `template_slots`
 Assigns exercises to each template day with rep ranges, set counts, and rest intervals.
+
+Current slot assignments:
+
+**Upper A** — horizontal push/pull emphasis  
+Barbell Bench Press · Barbell Row · Barbell OHP · Chin-up · DB Lateral Raise · DB Tricep Overhead Ext
+
+**Upper B** — vertical pull/push emphasis  
+Pull-up / Weighted Pull-up · DB Incline Press · DB Row (one-arm) · DB Shoulder Press · DB Rear Delt Fly · DB Curl
+
+**Lower A** — quad-dominant  
+Barbell Back Squat · Barbell Front Squat · DB Bulgarian Split Squat · Lying DB Leg Curl
+
+**Lower B** — hip-dominant  
+Barbell Back Squat · Barbell Romanian Deadlift · DB Bulgarian Split Squat · DB Walking Lunge
 
 #### `sessions`
 One row per completed workout. Tracks `block_week` (1–6) and `block_number` for periodisation.

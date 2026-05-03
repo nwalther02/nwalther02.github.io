@@ -14,19 +14,43 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
+  /* Surfaces — hex baseline */
   --bg:#0b0f1a;--surf1:#111827;--surf2:#1a2235;--surf3:#212d42;--surf4:#2a3750;
-  --volt:#d4f500;--volt-dim:#b8d800;--volt-subtle:rgba(212,245,0,.08);--volt-border:rgba(212,245,0,.22);
+  /* Accent */
+  --volt:#d4f500;--volt-dim:#b8d800;
+  --volt-subtle:rgba(212,245,0,.08);--volt-border:rgba(212,245,0,.22);
+  /* Text */
   --text:#eef2ff;--text2:#8b9ab8;--text3:#4d5f7a;
+  /* Borders */
   --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.14);
-  --red:#f05050;--red-bg:rgba(240,80,80,.1);
+  /* Status */
+  --red:#f05050;--red-bg:rgba(240,80,80,.1);--green:#4ade80;
+  /* Shape */
   --r:10px;--r2:14px;--r3:18px;
-  --ff:'Barlow',system-ui,sans-serif;
-  --ffc:'Barlow Condensed',system-ui,sans-serif;
+  /* Type */
+  --ff:'Barlow',system-ui,sans-serif;--ffc:'Barlow Condensed',system-ui,sans-serif;
+  /* Motion */
   --tr:all .15s cubic-bezier(.4,0,.2,1);
-  --safe-b:env(safe-area-inset-bottom,0px);
+  /* Safe areas */
+  --safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);
+  --safe-l:env(safe-area-inset-left,0px);--safe-r:env(safe-area-inset-right,0px);
+  /* Layout */
+  --rail-w:0px;
+}
+/* oklch upgrade — identical percepts, progressive enhancement */
+@supports (color:oklch(0 0 0)){
+  :root{
+    --bg:oklch(9.5% .028 264);--surf1:oklch(14% .035 264);
+    --surf2:oklch(18.5% .045 262);--surf3:oklch(23% .055 260);--surf4:oklch(28% .065 258);
+    --volt:oklch(93% .255 107);--volt-dim:oklch(83% .245 107);
+    --volt-subtle:oklch(93% .255 107 / 8%);--volt-border:oklch(93% .255 107 / 22%);
+    --text:oklch(96% .012 270);--text2:oklch(64% .048 255);--text3:oklch(46% .05 255);
+    --border:oklch(100% 0 0 / 7%);--border2:oklch(100% 0 0 / 14%);
+    --red:oklch(62% .195 26);--red-bg:oklch(62% .195 26 / 10%);--green:oklch(84% .19 148);
+  }
 }
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--ff);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
-#app{max-width:560px;margin:0 auto;padding-bottom:calc(64px + var(--safe-b));min-height:100vh}
+#app{max-width:560px;margin:0 auto;padding-bottom:calc(max(12px,var(--safe-b)) + 8px);min-height:100dvh}
 input,textarea,select{background:var(--surf3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r);padding:11px 13px;font-size:16px;font-family:var(--ff);width:100%;outline:none;transition:var(--tr);-webkit-appearance:none;}
 input:focus,textarea:focus{border-color:var(--volt);background:var(--surf4);box-shadow:0 0 0 3px var(--volt-subtle)}
 input::placeholder,textarea::placeholder{color:var(--text3)}
@@ -53,17 +77,58 @@ button:active{transform:scale(.96)}
 #sync-badge{position:fixed;bottom:calc(16px + var(--safe-b));right:16px;z-index:99;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:4px 9px;border-radius:20px;border:1px solid var(--border2);background:var(--surf2);color:var(--text3);opacity:0;transition:opacity .4s;pointer-events:none}
 #sync-badge.show{opacity:1}
 #sync-badge.syncing{color:var(--volt);border-color:var(--volt-border)}
-#sync-badge.synced{color:#4ade80;border-color:rgba(74,222,128,.3)}
+#sync-badge.synced{color:var(--green);border-color:oklch(84% .19 148 / 30%)}
 #sync-badge.local{color:var(--text3);border-color:var(--border2)}
 #sync-badge.error{color:var(--red);border-color:var(--red-bg)}
-#ex-sheet{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:50;display:none;align-items:flex-end;-webkit-tap-highlight-color:transparent}
-.sheet{background:var(--surf1);border-radius:var(--r3) var(--r3) 0 0;padding:20px 16px calc(24px + var(--safe-b));width:100%;max-height:82vh;overflow-y:auto}
+#ex-sheet{position:fixed;inset:0;background:oklch(0% 0 0 / 65%);z-index:50;display:none;align-items:flex-end;-webkit-tap-highlight-color:transparent}
+.sheet{background:var(--surf1);border-radius:var(--r3) var(--r3) 0 0;padding:20px 16px calc(24px + var(--safe-b));width:100%;max-height:82dvh;overflow-y:auto}
 .sheet-handle{width:36px;height:4px;background:var(--surf4);border-radius:2px;margin:0 auto 20px}
 .lib-row{display:flex;align-items:center;gap:10px;background:var(--surf2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;cursor:pointer;transition:var(--tr);touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .lib-row:active{background:var(--surf3);border-color:var(--volt-border)}
+/* View transitions — fires only on view switches, not every render() */
+::view-transition-old(root){animation:120ms ease-in both _vt-out}
+::view-transition-new(root){animation:180ms ease-out both _vt-in}
+@keyframes _vt-out{to{opacity:0}}
+@keyframes _vt-in{from{opacity:0}}
+/* Rail nav — hidden on mobile */
+#rail{display:none}
+/* Desktop ≥900px: left rail + wider content */
+@media(min-width:900px){
+  :root{--rail-w:220px}
+  body{padding-left:var(--rail-w)}
+  #app{max-width:720px;margin-left:0;padding-bottom:40px}
+  #rail{
+    display:flex;flex-direction:column;gap:2px;
+    position:fixed;top:0;left:0;bottom:0;width:var(--rail-w);
+    background:var(--surf1);border-right:1px solid var(--border);
+    padding:24px 12px calc(24px + var(--safe-b));z-index:30;overflow-y:auto
+  }
+  #rail-logo{padding:4px 10px 20px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+  #rail-logo .label{font-size:9px;margin-bottom:3px}
+  #rail-logo .wordmark{font-family:var(--ffc);font-size:22px;font-weight:700;color:var(--volt);letter-spacing:.02em;line-height:1}
+  #rail button{
+    width:100%;text-align:left;display:flex;align-items:center;gap:8px;
+    background:transparent;border:1px solid transparent;color:var(--text2);
+    border-radius:var(--r);padding:10px 12px;font-size:13px;font-weight:600;min-height:40px
+  }
+  #rail button:hover{background:var(--surf2);color:var(--text);border-color:var(--border)}
+  #rail button.rail-active{background:var(--volt-subtle);color:var(--volt);border-color:var(--volt-border)}
+  /* Bottom sheet → centered modal on desktop */
+  #ex-sheet{align-items:center;justify-content:center}
+  .sheet{width:min(480px,100%);border-radius:var(--r3);padding-bottom:24px;max-height:80dvh}
+}
 </style>
 </head>
 <body>
+<nav id="rail">
+  <div id="rail-logo">
+    <div class="label">Training</div>
+    <div class="wordmark">Iron Logic</div>
+  </div>
+  <button data-view="picker" onclick="STATE.view='picker';render()">Programs</button>
+  <button data-view="history" onclick="goHistory()">History</button>
+  <button onclick="Drive.requestDriveAccess()" title="Connect Google Drive">☁ Drive</button>
+</nav>
 <div id="app"></div>
 <div id="sync-badge">Local</div>
 <div id="ex-sheet" onclick="if(event.target===this)closeExSheet()"><div class="sheet"></div></div>
@@ -447,9 +512,10 @@ function hydrate() {
     if (hist) STATE.history = JSON.parse(hist) || [];
     if (raw) {
       const d = JSON.parse(raw);
-      // Only restore an active in-progress session
-      if (d.session && d.session.startedAt && !d.session.endedAt) {
-        STATE.session = d.session;
+      // Restore started-but-unfinished sessions, or unstarted drafts that have exercises
+      const s = d.session;
+      if (s && !s.endedAt && (s.startedAt || (s.exercises && s.exercises.length > 0))) {
+        STATE.session = s;
         STATE.view = 'session';
         return;
       }
@@ -599,18 +665,18 @@ function rPicker() {
     <button class="btn-sm btn-primary" onclick="STATE.view='session';render()">Resume →</button>
   </div>` : ''}
 </div>
-<div style="padding:16px">
+<div style="padding:12px">
   ${rNextWorkoutBanner()}
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
     ${PROGRAMS.map(p => `
-    <div onclick="loadProgram('${p.id}')" style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r3);padding:16px;cursor:pointer;transition:var(--tr);position:relative;overflow:hidden" onmouseenter="this.style.borderColor='var(--volt-border)';this.style.background='var(--surf3)'" onmouseleave="this.style.borderColor='var(--border)';this.style.background='var(--surf2)'" ontouchstart="this.style.borderColor='var(--volt-border)';this.style.background='var(--surf3)'" ontouchend="this.style.borderColor='var(--border)';this.style.background='var(--surf2)'">
+    <div onclick="loadProgram('${p.id}')" style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r3);padding:14px;cursor:pointer;transition:var(--tr);position:relative;overflow:hidden;min-height:124px;display:flex;flex-direction:column" onmouseenter="this.style.borderColor='var(--volt-border)';this.style.background='var(--surf3)'" onmouseleave="this.style.borderColor='var(--border)';this.style.background='var(--surf2)'" ontouchstart="this.style.borderColor='var(--volt-border)';this.style.background='var(--surf3)'" ontouchend="this.style.borderColor='var(--border)';this.style.background='var(--surf2)'">
       <div style="font-family:var(--ffc);font-size:28px;font-weight:700;color:var(--volt);line-height:1;margin-bottom:4px">${p.label}</div>
       <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">${p.tag}</div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:10px">${p.description}</div>
-      <div style="font-size:11px;color:var(--text3)">${p.exercises.length} exercises</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${p.description}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:auto">${p.exercises.length} exercises</div>
     </div>`).join('')}
   </div>
-  <button class="btn-outline btn-sm" style="width:100%;margin-top:12px" onclick="loadBlank()">+ Start blank session</button>
+  <button class="btn-outline" style="width:100%;margin-top:12px;min-height:44px;font-size:13px;padding:10px 16px" onclick="loadBlank()">+ Start blank session</button>
 </div>`;
 }
 
@@ -758,7 +824,6 @@ function rExercise(ex, idx) {
           <input placeholder="Sets" value="${ex.targetSets||''}" style="font-size:13px;padding:7px 10px;width:65px;flex:none" oninput="STATE.session.exercises[${exIdx}].targetSets=this.value;persist()">
           <input placeholder="Rep range" value="${ex.targetRepRange||''}" style="font-size:13px;padding:7px 10px;flex:1;min-width:0" oninput="STATE.session.exercises[${exIdx}].targetRepRange=this.value;persist()">
         </div>
-        ${rSuggestionHint(ex)}
         ${ex.notes ? `<div style="margin-top:9px;font-size:12px;color:var(--text3);line-height:1.55;padding:8px 11px;background:var(--surf3);border-radius:7px;border-left:2px solid var(--volt-border)">${ex.notes}</div>` : ''}
       </div>
       <button class="btn-ghost btn-danger btn-sm" style="padding:6px;min-height:auto;font-size:13px;flex-shrink:0" onclick="removeEx('${ex.id}')">✕</button>
@@ -772,9 +837,10 @@ function rExercise(ex, idx) {
     </div>` : ''}
   </div>
   <div style="background:var(--bg)">
-    <div style="display:grid;grid-template-columns:24px 1fr 1fr 50px 30px 26px;gap:4px;padding:7px 14px;border-bottom:1px solid var(--border)">
+    <div style="display:grid;grid-template-columns:24px 1fr 1fr 50px 30px 26px;gap:4px;padding:7px 14px;border-bottom:${(ex.matchStatus==='fallback-unresolved'||ex.suggestion)?'none':'1px solid var(--border)'}">
       ${['#','Wt','Reps','RPE','',''].map(l=>`<span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)">${l}</span>`).join('')}
     </div>
+    ${(ex.matchStatus==='fallback-unresolved'||ex.suggestion) ? `<div style="padding:0 14px 8px;border-bottom:1px solid var(--border)">${rSuggestionHint(ex)}</div>` : ''}
     ${ex.sets.map((set,si) => `
     <div style="display:grid;grid-template-columns:24px 1fr 1fr 50px 30px 26px;gap:4px;align-items:center;padding:5px 14px;border-bottom:1px solid var(--border);background:${set.completed?'var(--volt-subtle)':'transparent'};transition:background .2s">
       <span style="font-family:var(--ffc);font-size:13px;font-weight:700;color:${set.completed?'var(--volt)':'var(--text3)'}">${set.setNumber}</span>
@@ -950,7 +1016,7 @@ function submitExToSession(save) {
     const lib = loadCustomExercises();
     const isDupe = lib.some(e => e.name.trim().toLowerCase() === name.toLowerCase());
     if (!isDupe) {
-      lib.push({ id: uid(), name, targetSets: sets, targetRepRange: reps, notes: '', restSeconds: 90 });
+      lib.push({ id: uid(), name, targetSets: sets, targetRepRange: reps, notes: '', restSeconds: 90, equipment: 'dumbbell' });
       saveCustomExercises(lib);
     }
   }
@@ -1043,8 +1109,10 @@ function parseGymInput(val) {
 
 function normalizeExerciseName(name) {
   return String(name).trim().toLowerCase()
-    .replace(/-/g, ' ').replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim()
-    .replace(/\s/g, '-');
+    .replace(/[^\w\s-]/g, ' ')  // remove non-word-non-hyphen chars (parens, slashes); keep hyphens
+    .replace(/\s+/g, '-')        // spaces → hyphens
+    .replace(/-+/g, '-')         // collapse multiple hyphens
+    .replace(/^-|-$/g, '');      // strip leading/trailing hyphens
 }
 
 function snapWeight(val, equipment) {
@@ -1098,14 +1166,18 @@ function computeProgression(lastRecord, equipment, exerciseId) {
   const prevVirtual = parseGymInput(exercise.virtualWeight) ?? weight;
   const newVirtual  = (rpe === null || rpe <= 8) ? prevVirtual * 1.025 : prevVirtual;
 
+  const prevSnapped = snapWeight(weight, equipment);
+
   if (equipment === 'dumbbell') {
     const gap = newVirtual - DB_CEILING;
     if (gap > 0) {
       let technique = gap < 5 ? 'Tempo 3-1-1-0' : gap <= 15 ? 'Myo-reps' : 'Myo-reps+';
-      return { suggestedWeight: snapWeight(Math.min(newVirtual, DB_CEILING), equipment), virtualWeight: newVirtual, technique, hint: null };
+      return { suggestedWeight: snapWeight(Math.min(newVirtual, DB_CEILING), equipment), virtualWeight: newVirtual, technique, hint: null, isRepTarget: false };
     }
   }
-  return { suggestedWeight: snapWeight(newVirtual, equipment), virtualWeight: newVirtual, technique: null, hint: null };
+
+  const snapped = snapWeight(newVirtual, equipment);
+  return { suggestedWeight: snapped, virtualWeight: newVirtual, technique: null, hint: null, isRepTarget: snapped === prevSnapped };
 }
 
 // Mutates each session exercise with suggestion + matchStatus.
@@ -1133,6 +1205,9 @@ function rSuggestionHint(ex) {
   }
   const s = ex.suggestion;
   if (!s) return '';
+  if (s.isRepTarget) {
+    return `<div style="margin-top:6px;font-size:12px;color:var(--text2)">Hold <span style="font-weight:700;color:var(--text)">~${s.suggestedWeight} lb</span> <span style="color:var(--text3)">— target +1 rep</span></div>`;
+  }
   const tag  = s.technique ? `<span style="margin-left:6px;font-size:10px;color:var(--volt);background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:4px;padding:1px 6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">${s.technique}</span>` : '';
   const hint = s.hint ? `<span style="color:var(--text3)"> · ${s.hint}</span>` : '';
   return `<div style="margin-top:6px;font-size:12px;color:var(--text2)">Suggested: <span style="font-weight:700;color:var(--text)">~${s.suggestedWeight} lb</span>${tag}${hint}</div>`;
@@ -1179,7 +1254,7 @@ function rNextWorkoutBanner() {
   const nextId   = getNextProgramId();
   const nextProg = PROGRAMS.find(p => p.id === nextId);
   if (!nextProg) return '';
-  return `<div style="margin-bottom:14px;background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:var(--r2);padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+  return `<div style="margin-bottom:10px;min-height:72px;background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:var(--r2);padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
     <div>
       <div style="font-size:11px;color:var(--volt);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">Up Next</div>
       <div style="font-size:14px;font-weight:600">${nextProg.label} <span style="font-weight:400;color:var(--text2)">· ${nextProg.tag}</span></div>
@@ -1246,6 +1321,7 @@ function runMigration() {
     console.log('[Iron Logic] Migration applied successfully.');
   } catch(e) {
     console.warn('[Iron Logic] Migration error:', e);
+    try { localStorage.setItem(LS_SCHEMA_V1, 'error'); } catch(_) {}
   }
 }
 
@@ -1365,14 +1441,28 @@ function deleteHistory(idx) {
 // ─────────────────────────────────────────────
 function render() {
   const app = $('app');
-  switch(STATE.view) {
-    case 'picker':  app.innerHTML = rPicker(); break;
-    case 'session': app.innerHTML = rSession(); break;
-    case 'history': app.innerHTML = rHistory(); break;
-    case 'preview': app.innerHTML = rPreview(STATE.previewIdx); break;
-    default:        app.innerHTML = rPicker();
+  const switching = app.dataset.view && app.dataset.view !== STATE.view;
+
+  const doRender = () => {
+    switch(STATE.view) {
+      case 'picker':  app.innerHTML = rPicker(); break;
+      case 'session': app.innerHTML = rSession(); break;
+      case 'history': app.innerHTML = rHistory(); break;
+      case 'preview': app.innerHTML = rPreview(STATE.previewIdx); break;
+      default:        app.innerHTML = rPicker();
+    }
+    if (STATE.view==='session') renderTimerEl();
+    app.dataset.view = STATE.view;
+    document.querySelectorAll('#rail button[data-view]').forEach(b => {
+      b.classList.toggle('rail-active', b.dataset.view === STATE.view);
+    });
+  };
+
+  if (switching && document.startViewTransition) {
+    document.startViewTransition(doRender);
+  } else {
+    doRender();
   }
-  if (STATE.view==='session') renderTimerEl();
 }
 
 // ─────────────────────────────────────────────
