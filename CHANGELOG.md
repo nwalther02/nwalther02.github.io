@@ -29,6 +29,10 @@
 
 ### Fixed
 
+**T6 — Dumbbell virtual weight lineage guards (PR #42)**
+- `computeProgression()`: replaced `?? weight` null-coalesce with an explicit `!= null && > 0` guard when reading `exercise.virtualWeight`; a stored value of `0` (bodyweight starting weight such as Chin-up) now falls back to the logged weight instead of locking progression at zero virtual weight
+- `finalizeSessionExercises()`: when the re-anchor threshold is exceeded and the user logged at the DB ceiling (39.5–40.5 lb), `suggestion.virtualWeight` is now preserved rather than collapsing to the logged actual weight — prevents a technique regression loop for ceiling-bound exercises that correctly hit the dumbbell cap
+
 **Modal backdrop fallback**
 - `#ex-sheet` backdrop now declares `background:rgba(0,0,0,.65)` before the `oklch(0% 0 0 / 65%)` value; browsers without OKLCH support retain the dimmed scrim instead of showing a transparent overlay
 
@@ -50,7 +54,7 @@
 - `runMigration()` catch block: `LS_SCHEMA_V1` is now set to `'error'` on failure, preventing the migration from re-running on every boot when corrupted `localStorage` causes a throw
 
 ### Files changed
-- `workout/index.html` — CSS token layer, dynamic viewport units, safe-area tokens, view transitions, desktop rail layout, bottom-sheet modal, Select Program picker layout polish, T1–T5 patches
+- `workout/index.html` — CSS token layer, dynamic viewport units, safe-area tokens, view transitions, desktop rail layout, bottom-sheet modal, Select Program picker layout polish, T1–T6 patches
 
 ---
 
