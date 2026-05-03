@@ -725,8 +725,11 @@ function rSession() {
 <div class="sticky-header">
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
     <button class="btn-ghost btn-sm" onclick="STATE.view='picker';render()" style="padding:6px 10px">← Programs</button>
-    <div style="display:flex;gap:6px">
-      <button class="btn-sm btn-outline" onclick="exportCSV(STATE.session)" title="Spreadsheet export only — not importable">Export Session CSV</button>
+    <div style="display:flex;gap:6px;align-items:flex-start">
+      <div style="text-align:right">
+        <button class="btn-sm btn-outline" onclick="exportCSV(STATE.session)" title="Spreadsheet export only — not importable">Export Session CSV</button>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">Spreadsheet only · not importable</div>
+      </div>
       <button class="btn-sm btn-outline" onclick="goHistory()">History</button>
     </div>
   </div>
