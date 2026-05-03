@@ -12,6 +12,7 @@ PRAGMA journal_mode  = WAL;
 -- Technique lookup
 -- ---------------------------------------------------------------------------
 -- Separates raw external load (weight_lbs) from effective stimulus modifier.
+
 -- technique_id is logged metadata only — it is NOT a lineage discriminator.
 -- Progression history is keyed by exercise_id alone; technique is derived
 -- from (virtual_weight_lbs - weight_ceiling) on every prescription call.
