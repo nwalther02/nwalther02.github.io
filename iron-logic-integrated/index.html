@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b0f1a">
+<link rel="manifest" href="/iron-logic-integrated/manifest.json">
+<link rel="apple-touch-icon" href="/iron-logic-integrated/icons/icon-192.png">
+<title>Workout Logger</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Surfaces — hex baseline */
+  --bg:#0b0f1a;--surf1:#111827;--surf2:#1a2235;--surf3:#212d42;--surf4:#2a3750;
+  /* Accent */
+  --volt:#d4f500;--volt-dim:#b8d800;
+  --volt-subtle:rgba(212,245,0,.08);--volt-border:rgba(212,245,0,.22);
+  /* Text */
+  --text:#eef2ff;--text2:#8b9ab8;--text3:#4d5f7a;
+  /* Borders */
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.14);
+  /* Status */
+  --red:#f05050;--red-bg:rgba(240,80,80,.1);--green:#4ade80;
+  /* Shape */
+  --r:10px;--r2:14px;--r3:18px;
+  /* Type */
+  --ff:'Barlow',system-ui,sans-serif;--ffc:'Barlow Condensed',system-ui,sans-serif;
+  /* Motion */
+  --tr:all .15s cubic-bezier(.4,0,.2,1);
+  /* Safe areas */
+  --safe-t:env(safe-area-inset-top,0px);--safe-b:env(safe-area-inset-bottom,0px);
+  --safe-l:env(safe-area-inset-left,0px);--safe-r:env(safe-area-inset-right,0px);
+  /* Layout */
+  --rail-w:0px;
+}
+/* oklch upgrade — identical percepts, progressive enhancement */
+@supports (color:oklch(0 0 0)){
+  :root{
+    --bg:oklch(9.5% .028 264);--surf1:oklch(14% .035 264);
+    --surf2:oklch(18.5% .045 262);--surf3:oklch(23% .055 260);--surf4:oklch(28% .065 258);
+    --volt:oklch(93% .255 107);--volt-dim:oklch(83% .245 107);
+    --volt-subtle:oklch(93% .255 107 / 8%);--volt-border:oklch(93% .255 107 / 22%);
+    --text:oklch(96% .012 270);--text2:oklch(64% .048 255);--text3:oklch(46% .05 255);
+    --border:oklch(100% 0 0 / 7%);--border2:oklch(100% 0 0 / 14%);
+    --red:oklch(62% .195 26);--red-bg:oklch(62% .195 26 / 10%);--green:oklch(84% .19 148);
+  }
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--ff);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;overscroll-behavior:none}
+#app{max-width:560px;margin:0 auto;padding-bottom:calc(max(12px,var(--safe-b)) + 8px);min-height:100dvh}
+input,textarea,select{background:var(--surf3);border:1px solid var(--border2);color:var(--text);border-radius:var(--r);padding:11px 13px;font-size:16px;font-family:var(--ff);width:100%;outline:none;transition:var(--tr);-webkit-appearance:none;}
+input:focus,textarea:focus{border-color:var(--volt);background:var(--surf4);box-shadow:0 0 0 3px var(--volt-subtle)}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+input[type=checkbox]{display:none}
+.chk{width:26px;height:26px;border-radius:7px;border:2px solid var(--border2);background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:var(--tr);touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.chk.on{background:var(--volt);border-color:var(--volt)}
+.chk.on::after{content:'';display:block;width:8px;height:5px;border-left:2.5px solid #0b0f1a;border-bottom:2.5px solid #0b0f1a;transform:rotate(-45deg) translateY(-1px)}
+button{cursor:pointer;font-family:var(--ff);font-size:13px;font-weight:600;border:1px solid var(--border2);background:var(--surf2);color:var(--text2);border-radius:var(--r);padding:10px 16px;min-height:44px;transition:var(--tr);touch-action:manipulation;letter-spacing:.02em;-webkit-tap-highlight-color:transparent}
+button:hover{background:var(--surf3);color:var(--text)}
+button:active{transform:scale(.96)}
+.btn-primary{background:var(--volt);color:#0b0f1a;border-color:var(--volt);font-weight:700;letter-spacing:.05em}
+.btn-primary:hover{background:var(--volt-dim);border-color:var(--volt-dim);color:#0b0f1a}
+.btn-outline{background:transparent;border-color:var(--border2);color:var(--text2)}
+.btn-outline:hover{border-color:var(--volt-border);color:var(--volt);background:var(--volt-subtle)}
+.btn-ghost{background:transparent;border:none;color:var(--text3);padding:8px;min-height:36px}
+.btn-ghost:hover{color:var(--text2);background:var(--surf2)}
+.btn-danger{background:transparent;border:none;color:var(--red)}
+.btn-danger:hover{background:var(--red-bg)}
+.btn-sm{padding:8px 12px;font-size:12px;min-height:38px;border-radius:8px}
+.vlabel{display:inline-flex;align-items:center;background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:6px;padding:3px 9px;font-size:11px;font-weight:700;color:var(--volt);letter-spacing:.08em;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;background:var(--surf3);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--text2)}
+.label{font-family:var(--ffc);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+.sticky-header{background:var(--surf1);border-bottom:1px solid var(--border);padding:14px 16px;position:sticky;top:0;z-index:20}
+#sync-badge{position:fixed;bottom:calc(16px + var(--safe-b));right:16px;z-index:99;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:4px 9px;border-radius:20px;border:1px solid var(--border2);background:var(--surf2);color:var(--text3);opacity:0;transition:opacity .4s;pointer-events:none}
+#sync-badge.show{opacity:1}
+#sync-badge.syncing{color:var(--volt);border-color:var(--volt-border)}
+#sync-badge.synced{color:var(--green);border-color:oklch(84% .19 148 / 30%)}
+#sync-badge.local{color:var(--text3);border-color:var(--border2)}
+#sync-badge.error{color:var(--red);border-color:var(--red-bg)}
+#ex-sheet{position:fixed;inset:0;background:rgba(0,0,0,.65);background:oklch(0% 0 0 / 65%);z-index:50;display:none;align-items:flex-end;-webkit-tap-highlight-color:transparent}
+.sheet{background:var(--surf1);border-radius:var(--r3) var(--r3) 0 0;padding:20px 16px calc(24px + var(--safe-b));width:100%;max-height:82dvh;overflow-y:auto}
+.sheet-handle{width:36px;height:4px;background:var(--surf4);border-radius:2px;margin:0 auto 20px}
+.lib-row{display:flex;align-items:center;gap:10px;background:var(--surf2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;cursor:pointer;transition:var(--tr);touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.lib-row:active{background:var(--surf3);border-color:var(--volt-border)}
+/* View transitions — fires only on view switches, not every render() */
+::view-transition-old(root){animation:120ms ease-in both _vt-out}
+::view-transition-new(root){animation:180ms ease-out both _vt-in}
+@keyframes _vt-out{to{opacity:0}}
+@keyframes _vt-in{from{opacity:0}}
+/* Rail nav — hidden on mobile */
+#rail{display:none}
+/* Desktop ≥900px: left rail + wider content */
+@media(min-width:900px){
+  :root{--rail-w:220px}
+  body{padding-left:var(--rail-w)}
+  #app{max-width:720px;margin-left:0;padding-bottom:40px}
+  #rail{
+    display:flex;flex-direction:column;gap:2px;
+    position:fixed;top:0;left:0;bottom:0;width:var(--rail-w);
+    background:var(--surf1);border-right:1px solid var(--border);
+    padding:24px 12px calc(24px + var(--safe-b));z-index:30;overflow-y:auto
+  }
+  #rail-logo{padding:4px 10px 20px;margin-bottom:8px;border-bottom:1px solid var(--border)}
+  #rail-logo .label{font-size:9px;margin-bottom:3px}
+  #rail-logo .wordmark{font-family:var(--ffc);font-size:22px;font-weight:700;color:var(--volt);letter-spacing:.02em;line-height:1}
+  #rail button{
+    width:100%;text-align:left;display:flex;align-items:center;gap:8px;
+    background:transparent;border:1px solid transparent;color:var(--text2);
+    border-radius:var(--r);padding:10px 12px;font-size:13px;font-weight:600;min-height:40px
+  }
+  #rail button:hover{background:var(--surf2);color:var(--text);border-color:var(--border)}
+  #rail button.rail-active{background:var(--volt-subtle);color:var(--volt);border-color:var(--volt-border)}
+  /* Bottom sheet → centered modal on desktop */
+  #ex-sheet{align-items:center;justify-content:center}
+  .sheet{width:min(480px,100%);border-radius:var(--r3);padding-bottom:24px;max-height:80dvh}
+}
+</style>
+</head>
+<body>
+<nav id="rail">
+  <div id="rail-logo">
+    <div class="label">Training</div>
+    <div class="wordmark">Iron Logic</div>
+  </div>
+  <button data-view="picker" onclick="STATE.view='picker';render()">Programs</button>
+  <button data-view="history" onclick="goHistory()">History</button>
+  <button onclick="Drive.requestDriveAccess()" title="Connect Google Drive">☁ Drive</button>
+</nav>
+<div id="app"></div>
+<div id="sync-badge">Local</div>
+<div id="ex-sheet" onclick="if(event.target===this)closeExSheet()"><div class="sheet"></div></div>
+<script>
+// ─────────────────────────────────────────────
+//  GOOGLE DRIVE PERSISTENCE MODULE
+//  Scope: drive.appdata (hidden app folder, not visible in Drive UI)
+//  Replace DRIVE_CLIENT_ID with your OAuth 2.0 Web Client ID from
+//  Google Cloud Console → APIs & Services → Credentials.
+//  Authorized JS origins must include your site domain.
+// ─────────────────────────────────────────────
+const DRIVE_CLIENT_ID = '1047708481556-8cmfl178c0ufa6lalu34t8sd420nirjm.apps.googleusercontent.com'; // ← OAuth Client ID
+const DRIVE_SCOPE     = 'https://www.googleapis.com/auth/drive.appdata';
+const DRIVE_FILENAME  = 'workout-history.json';
+const LS_DRIVE_TOKEN  = 'wl3_drive_token';
+const LS_SYNC_TS      = 'wl3_sync_ts';
+
+const Drive = (() => {
+  let _token       = null;   // current access token string
+  let _tokenExpiry = 0;      // ms timestamp when token expires
+  let _fileId      = null;   // cached Drive file ID
+  let _tokenClient = null;   // GIS token client
+  let _saveTimer   = null;   // debounce handle
+  let _pendingSave = null;   // history payload queued while no token
+
+  // ── Sync badge ────────────────────────────────
+  function badge(state, text) {
+    const el = document.getElementById('sync-badge');
+    if (!el) return;
+    el.className = 'show ' + (state || '');
+    el.textContent = text || state;
+    clearTimeout(el._hide);
+    if (state === 'synced') {
+      el._hide = setTimeout(() => { el.className = ''; }, 3000);
+    }
+  }
+
+  // ── Token helpers ─────────────────────────────
+  function tokenValid() {
+    return _token && Date.now() < _tokenExpiry - 30000;
+  }
+
+  function storeToken(token, expiresInSec) {
+    _token       = token;
+    _tokenExpiry = Date.now() + (expiresInSec || 3600) * 1000;
+    try {
+      localStorage.setItem(LS_DRIVE_TOKEN, JSON.stringify({ token: _token, expiry: _tokenExpiry }));
+    } catch(e) {}
+  }
+
+  function loadCachedToken() {
+    try {
+      const raw = localStorage.getItem(LS_DRIVE_TOKEN);
+      if (!raw) return false;
+      const d = JSON.parse(raw);
+      if (d && d.token && d.expiry && Date.now() < d.expiry - 30000) {
+        _token       = d.token;
+        _tokenExpiry = d.expiry;
+        return true;
+      }
+    } catch(e) {}
+    return false;
+  }
+
+  // ── GIS init ──────────────────────────────────
+  function initTokenClient() {
+    if (_tokenClient) return;
+    if (!window.google?.accounts?.oauth2) return;
+    _tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CLIENT_ID,
+      scope:     DRIVE_SCOPE,
+      callback:  (resp) => {
+        if (resp.error) {
+          console.warn('[Drive] Token error:', resp.error);
+          badge('error', 'Drive unavailable');
+          return;
+        }
+        storeToken(resp.access_token, resp.expires_in);
+        console.log('[Drive] Token granted');
+        // Flush any queued save
+        if (_pendingSave !== null) {
+          const queued = _pendingSave;
+          _pendingSave = null;
+          saveWorkoutHistoryToDrive(queued);
+        } else {
+          // First auth — try to load from Drive
+          loadWorkoutHistoryFromDrive().then(hist => {
+            if (hist) mergeAndHydrateDriveHistory(hist);
+          });
+        }
+      },
+    });
+  }
+
+  // ── Drive REST helpers ────────────────────────
+  async function driveRequest(url, options = {}) {
+    if (!tokenValid()) return null;
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        'Authorization': `Bearer ${_token}`,
+        ...(options.headers || {}),
+      },
+    });
+    if (res.status === 401) {
+      // Token rejected — clear and request fresh
+      _token = null;
+      _tokenExpiry = 0;
+      try { localStorage.removeItem(LS_DRIVE_TOKEN); } catch(e) {}
+      return null;
+    }
+    return res;
+  }
+
+  async function listAppDataFiles() {
+    const res = await driveRequest(
+      `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name,modifiedTime)&q=name%3D%22${encodeURIComponent(DRIVE_FILENAME)}%22`
+    );
+    if (!res || !res.ok) return [];
+    const d = await res.json();
+    return d.files || [];
+  }
+
+  async function downloadFile(fileId) {
+    const res = await driveRequest(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`
+    );
+    if (!res || !res.ok) return null;
+    return await res.text();
+  }
+
+  async function createFile(jsonString) {
+    const meta = JSON.stringify({ name: DRIVE_FILENAME, parents: ['appDataFolder'] });
+    const body = new Blob([
+      '--boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + meta +
+      '\r\n--boundary\r\nContent-Type: application/json\r\n\r\n' + jsonString +
+      '\r\n--boundary--',
+    ], { type: 'multipart/related; boundary=boundary' });
+    const res = await driveRequest(
+      'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',
+      { method: 'POST', body }
+    );
+    if (!res || !res.ok) return null;
+    const d = await res.json();
+    return d.id || null;
+  }
+
+  async function updateFile(fileId, jsonString) {
+    const res = await driveRequest(
+      `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`,
+      { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: jsonString }
+    );
+    return res && res.ok;
+  }
+
+  // ── Public: load from Drive ───────────────────
+  async function loadWorkoutHistoryFromDrive() {
+    if (!tokenValid()) return null;
+    try {
+      const files = await listAppDataFiles();
+      if (!files.length) { console.log('[Drive] No history file found.'); return null; }
+      _fileId = files[0].id;
+      const raw = await downloadFile(_fileId);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return null;
+      console.log('[Drive] Loaded', parsed.length, 'sessions.');
+      return parsed;
+    } catch(e) {
+      console.warn('[Drive] Load error:', e);
+      return null;
+    }
+  }
+
+  // ── Public: save to Drive (debounced 2 s) ─────
+  function saveWorkoutHistoryToDrive(history) {
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(() => _doSave(history), 2000);
+  }
+
+  async function _doSave(history) {
+    if (!tokenValid()) {
+      console.log('[Drive] No valid token — queuing save.');
+      _pendingSave = history;
+      badge('local', 'Local only');
+      return;
+    }
+    badge('syncing', 'Syncing…');
+    try {
+      const payload = JSON.stringify(history);
+      if (!_fileId) {
+        const files = await listAppDataFiles();
+        _fileId = files.length ? files[0].id : null;
+      }
+      if (_fileId) {
+        await updateFile(_fileId, payload);
+      } else {
+        _fileId = await createFile(payload);
+      }
+      try { localStorage.setItem(LS_SYNC_TS, Date.now().toString()); } catch(e) {}
+      console.log('[Drive] Saved', history.length, 'sessions.');
+      badge('synced', 'Synced ✓');
+    } catch(e) {
+      console.warn('[Drive] Save error:', e);
+      badge('error', 'Sync failed');
+    }
+  }
+
+  // ── Public: unified persist (local + Drive) ───
+  function persistWorkoutHistory(history) {
+    // localStorage is always written first (synchronous, safe)
+    try { localStorage.setItem(LS_HIST, JSON.stringify(history)); } catch(e) {}
+    // Drive sync is async / debounced — never blocks UX
+    if (DRIVE_CLIENT_ID !== 'YOUR_GOOGLE_CLIENT_ID_HERE') {
+      saveWorkoutHistoryToDrive(history);
+    }
+  }
+
+  // ── Public: request Drive access (called once) ─
+  function requestDriveAccess() {
+    initTokenClient();
+    if (!_tokenClient) { console.warn('[Drive] GIS not loaded yet.'); return; }
+    _tokenClient.requestAccessToken({ prompt: 'consent' });
+  }
+
+  // ── Boot ──────────────────────────────────────
+  async function init() {
+    if (DRIVE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
+      console.log('[Drive] Client ID not set — Drive sync disabled.');
+      badge('local', 'Local only');
+      setTimeout(() => { const el = document.getElementById('sync-badge'); if (el) el.className = ''; }, 2500);
+      return;
+    }
+
+    // Restore cached token silently
+    const hasCached = loadCachedToken();
+
+    // Wait for GIS to load (it's async)
+    await new Promise(resolve => {
+      if (window.google?.accounts?.oauth2) { resolve(); return; }
+      const t = setInterval(() => {
+        if (window.google?.accounts?.oauth2) { clearInterval(t); resolve(); }
+      }, 100);
+      setTimeout(() => { clearInterval(t); resolve(); }, 5000); // give up after 5 s
+    });
+
+    initTokenClient();
+
+    if (hasCached) {
+      console.log('[Drive] Resuming from cached token.');
+      const drivHistory = await loadWorkoutHistoryFromDrive();
+      if (drivHistory) mergeAndHydrateDriveHistory(drivHistory);
+      else badge('synced', 'Drive ready');
+    } else {
+      badge('local', 'Local only');
+      setTimeout(() => { const el = document.getElementById('sync-badge'); if (el) el.className = ''; }, 2500);
+    }
+  }
+
+  return { init, requestDriveAccess, persistWorkoutHistory, saveWorkoutHistoryToDrive, badge };
+})();
+
+// Called after Drive load — merges Drive history with local, prefers newer
+function mergeAndHydrateDriveHistory(driveHistory) {
+  const localRaw = (() => { try { return JSON.parse(localStorage.getItem(LS_HIST)) || []; } catch(e) { return []; } })();
+  // Build a map keyed by session id, preferring the entry with a later savedAt
+  const map = new Map();
+  [...localRaw, ...driveHistory].forEach(h => {
+    const existing = map.get(h.id);
+    if (!existing) { map.set(h.id, h); return; }
+    const existingTs = existing.savedAt || existing.endedAt || '';
+    const newTs      = h.savedAt || h.endedAt || '';
+    if (newTs > existingTs) map.set(h.id, h);
+  });
+  const merged = [...map.values()].sort((a, b) => {
+    return (b.savedAt || b.date || '') > (a.savedAt || a.date || '') ? 1 : -1;
+  }).slice(0, 50);
+  if (merged.length > 0) {
+    STATE.history = merged;
+    try { localStorage.setItem(LS_HIST, JSON.stringify(merged)); } catch(e) {}
+    render(); // refresh UI with merged history
+    console.log('[Drive] Merged history:', merged.length, 'sessions.');
+  }
+  Drive.badge('synced', 'Synced ✓');
+}
+
+// ─────────────────────────────────────────────
+//  PROGRAM TEMPLATES
+//  Edit this array to add/modify training days.
+//  Each exercise: name, targetSets, targetRepRange, notes, restSeconds
+// ─────────────────────────────────────────────
+const PROGRAMS = [
+  {
+    id:'upper-a', label:'Upper A', tag:'Push Focus', color:'#d4f500',
+    description:'Horizontal push/pull emphasis. 3–4 sets per movement.',
+    exercises:[
+      {id:'barbell-bench-press',  equipment:'barbell',    name:'Barbell Bench Press',        targetSets:'4',targetRepRange:'4–6',  notes:'Pause 1s at chest. +2.5–5 lb if top of range hit.',restSeconds:180},
+      {id:'barbell-row',          equipment:'barbell',    name:'Barbell Row',                targetSets:'4',targetRepRange:'6–8',  notes:'Double overhand, chest to bar. Control the eccentric.',restSeconds:180},
+      {id:'overhead-press',       equipment:'barbell',    name:'Overhead Press',             targetSets:'3',targetRepRange:'6–8',  notes:'Full lockout. Brace hard.',restSeconds:150},
+      {id:'chin-up',               equipment:'bodyweight', name:'Chin-up',                    targetSets:'3',targetRepRange:'6–10', notes:'Underhand grip, full dead hang. Drive elbows to hips. Add load when top of range is clean.',restSeconds:120},
+      {id:'db-lateral-raise',     equipment:'dumbbell',   name:'DB Lateral Raise',           targetSets:'3',targetRepRange:'12–15',notes:'Slight forward lean, lead with elbows.',restSeconds:60},
+      {id:'db-overhead-tricep-extension', equipment:'dumbbell', name:'DB Overhead Tricep Extension', targetSets:'3',targetRepRange:'10–15',notes:'Single or double DB. Elbows in, full overhead ROM. Control the eccentric.',restSeconds:60},
+    ]
+  },
+  {
+    id:'upper-b', label:'Upper B', tag:'Pull Focus', color:'#d4f500',
+    description:'Vertical pull/push emphasis. Higher rep accessories.',
+    exercises:[
+      {id:'pull-up-weighted',     equipment:'bodyweight', name:'Pull-up / Weighted Pull-up', targetSets:'4',targetRepRange:'5–8',  notes:'Full dead hang. Add weight when top of range is clean.',restSeconds:180},
+      {id:'incline-db-press',     equipment:'dumbbell',   name:'Incline DB Press',           targetSets:'4',targetRepRange:'8–10', notes:'30–45° incline. Control descent.',restSeconds:150},
+      {id:'db-row',               equipment:'dumbbell',   name:'DB Row (One-Arm)',            targetSets:'3',targetRepRange:'8–12', notes:'Brace on bench, row to hip. Full stretch at bottom, squeeze at top. Both sides.',restSeconds:90},
+      {id:'db-shoulder-press',    equipment:'dumbbell',   name:'DB Shoulder Press',          targetSets:'3',targetRepRange:'8–10', notes:'Seated or standing. Full ROM.',restSeconds:120},
+      {id:'db-rear-delt-fly',     equipment:'dumbbell',   name:'DB Rear Delt Fly',           targetSets:'3',targetRepRange:'15–20',notes:'Hip hinge, soft elbow bend. Lead with elbow, squeeze rear delts at top.',restSeconds:60},
+      {id:'db-curl',              equipment:'dumbbell',   name:'DB Curl',                    targetSets:'3',targetRepRange:'10–12',notes:'Supinate at top. No momentum.',restSeconds:60},
+    ]
+  },
+  {
+    id:'lower-a', label:'Lower A', tag:'Squat Focus', color:'#d4f500',
+    description:'Quad-dominant. Heavy squat pattern leads.',
+    exercises:[
+      {id:'barbell-back-squat',       equipment:'barbell',    name:'Barbell Back Squat',       targetSets:'4',targetRepRange:'4–6',   notes:'Full depth, brace hard. +2.5–5 lb if top of range hit.',restSeconds:180},
+      {id:'barbell-front-squat',      equipment:'barbell',    name:'Barbell Front Squat',      targetSets:'3',targetRepRange:'6–10',  notes:'Clean or cross-arm grip. Elbows up, upright torso, full depth. Step out of rack carefully.',restSeconds:150},
+      {id:'db-bulgarian-split-squat', equipment:'dumbbell',   name:'DB Bulgarian Split Squat', targetSets:'3',targetRepRange:'10–12', notes:'Rear foot on bench. DBs in each hand.',restSeconds:90},
+      {id:'lying-db-leg-curl',        equipment:'dumbbell',   name:'Lying DB Leg Curl',        targetSets:'3',targetRepRange:'10–15', notes:'Prone on bench, dumbbell between feet. Full ROM. Squeeze at top of curl.',restSeconds:60},
+      {id:'standing-calf-raise',      equipment:'bodyweight', name:'Standing Calf Raise',       targetSets:'4',targetRepRange:'15–20', notes:'2-sec eccentric. Full ROM. 1 RIR.',restSeconds:60},
+    ]
+  },
+  {
+    id:'lower-b', label:'Lower B', tag:'Hinge Focus', color:'#d4f500',
+    description:'Hip-dominant. RDL leads, split squat accessory.',
+    exercises:[
+      {id:'barbell-back-squat',        equipment:'barbell',    name:'Barbell Back Squat',          targetSets:'3',targetRepRange:'6–8',    notes:'Full depth, brace hard. +2.5–5 lb if top of range hit. 2 RIR.',restSeconds:180},
+      {id:'romanian-deadlift-barbell', equipment:'barbell',    name:'Romanian Deadlift (Barbell)', targetSets:'3',targetRepRange:'8–10',   notes:'Hinge deep, stretch hamstrings, neutral spine. 2 RIR.',restSeconds:90},
+      {id:'db-bulgarian-split-squat',  equipment:'dumbbell',   name:'DB Bulgarian Split Squat',    targetSets:'3',targetRepRange:'10–12/leg',notes:'Rear foot on bench. DBs 25–35 lb. 2 RIR.',restSeconds:90},
+      {id:'db-walking-lunge',          equipment:'dumbbell',   name:'DB Walking Lunge',            targetSets:'2',targetRepRange:'12/leg', notes:'Upright torso, full step. DBs 20–30 lb. 2 RIR.',restSeconds:60},
+      {id:'standing-calf-raise',       equipment:'bodyweight', name:'Standing Calf Raise',         targetSets:'3',targetRepRange:'15–20',  notes:'Full ROM, 2-sec eccentric. 1 RIR.',restSeconds:60},
+    ]
+  },
+];
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+const LS_SESS      = 'wl3_session';
+const LS_HIST      = 'wl3_history';
+const LS_VIEW      = 'wl3_view';
+const LS_EXERCISES = 'wl3_exercises';
+const LS_ROTATION  = 'wl3_rotation';
+const LS_SCHEMA_V1 = 'wl3_schema_v1';
+
+let STATE = {
+  view: 'picker',       // picker | session | history | preview
+  session: null,        // active session object
+  history: [],          // array of completed sessions
+  previewIdx: null,
+  timer: { seconds:0, running:false, interval:null },
+};
+
+// ─────────────────────────────────────────────
+//  PERSISTENCE
+// ─────────────────────────────────────────────
+function persist(syncHistory = false) {
+  try {
+    localStorage.setItem(LS_SESS, JSON.stringify({
+      view: STATE.view,
+      session: STATE.session,
+    }));
+  } catch(e) {}
+  // History is synced to Drive only when it actually changed (session end, delete)
+  if (syncHistory) {
+    Drive.persistWorkoutHistory(STATE.history);
+  } else {
+    try { localStorage.setItem(LS_HIST, JSON.stringify(STATE.history)); } catch(e) {}
+  }
+}
+
+function hydrate() {
+  try {
+    const raw = localStorage.getItem(LS_SESS);
+    const hist = localStorage.getItem(LS_HIST);
+    if (hist) STATE.history = JSON.parse(hist) || [];
+    if (raw) {
+      const d = JSON.parse(raw);
+      // Restore started-but-unfinished sessions, or unstarted drafts that have exercises
+      const s = d.session;
+      if (s && !s.endedAt && (s.startedAt || (s.exercises && s.exercises.length > 0))) {
+        STATE.session = s;
+        STATE.view = 'session';
+        return;
+      }
+    }
+  } catch(e) {}
+  STATE.view = 'picker';
+}
+
+// ─────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────
+const uid = () => Math.random().toString(36).slice(2,9);
+const today = () => new Date().toISOString().slice(0,10);
+const vibrate = (p=50) => { try { navigator.vibrate && navigator.vibrate(p); } catch(e){} };
+const $ = id => document.getElementById(id);
+
+function makeSet(n, prevWeight='', prevReps='') {
+  return { id:uid(), setNumber:n, weight:prevWeight, reps:prevReps, rpe:'', completed:false, notes:'' };
+}
+
+function sessionFromProgram(prog) {
+  return {
+    id: uid(),
+    programId: prog.id,
+    title: prog.label,
+    tag: prog.tag,
+    date: today(),
+    notes: '',
+    startedAt: null,
+    endedAt: null,
+    exercises: prog.exercises.map(ex => ({
+      id: uid(),
+      exerciseId: ex.id || null,
+      exerciseNameSnapshot: ex.name,
+      equipment: ex.equipment || 'barbell',
+      matchStatus: 'matched',
+      suggestion: null,
+      virtualWeight: null,
+      wasReanchored: false,
+      name: ex.name,
+      targetSets: ex.targetSets,
+      targetRepRange: ex.targetRepRange,
+      notes: ex.notes,
+      restSeconds: ex.restSeconds || 90,
+      sets: Array.from({length: parseInt(ex.targetSets)||3}, (_,i) => makeSet(i+1)),
+    }))
+  };
+}
+
+function totalCompletedSets(sess) {
+  if (!sess) return 0;
+  return sess.exercises.reduce((a,ex) => a + ex.sets.filter(s=>s.completed).length, 0);
+}
+
+function saveToHistory(sess) {
+  if (!sess) return;
+  finalizeSessionExercises(sess);
+  const entry = { ...sess, savedAt: new Date().toISOString() };
+  // Replace existing entry with same id, or prepend
+  const idx = STATE.history.findIndex(h => h.id === sess.id);
+  if (idx >= 0) STATE.history[idx] = entry;
+  else STATE.history.unshift(entry);
+  if (STATE.history.length > 50) STATE.history = STATE.history.slice(0,50);
+}
+
+// ─────────────────────────────────────────────
+//  TIMER
+// ─────────────────────────────────────────────
+function startTimer(sec) {
+  if (STATE.timer.interval) clearInterval(STATE.timer.interval);
+  STATE.timer.seconds = sec;
+  STATE.timer.running = true;
+  tickTimer();
+  STATE.timer.interval = setInterval(tickTimer, 1000);
+}
+function resetTimer() {
+  if (STATE.timer.interval) clearInterval(STATE.timer.interval);
+  STATE.timer.seconds = 0;
+  STATE.timer.running = false;
+  renderTimerEl();
+}
+function tickTimer() {
+  if (STATE.timer.seconds > 0) {
+    STATE.timer.seconds--;
+    renderTimerEl();
+  } else {
+    clearInterval(STATE.timer.interval);
+    STATE.timer.running = false;
+    vibrate([80,40,80]);
+    renderTimerEl();
+  }
+}
+function renderTimerEl() {
+  const el = $('tdisplay'); if(!el) return;
+  const m = Math.floor(STATE.timer.seconds/60);
+  const s = STATE.timer.seconds % 60;
+  el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  const done = !STATE.timer.running && STATE.timer.seconds===0;
+  el.style.color = done ? 'var(--text3)' : STATE.timer.seconds<=10 ? 'var(--red)' : 'var(--volt)';
+  const bar = $('tbar');
+  if (bar) bar.style.width = done ? '0' : '100%';
+}
+
+// ─────────────────────────────────────────────
+//  EXPORT CSV
+// ─────────────────────────────────────────────
+function exportCSV(sess) {
+  if (!sess) return;
+  const esc = v => `"${(v||'').toString().replace(/"/g,'""')}"`;
+  const rows = [['Session','Date','Exercise','Set','Weight','Reps','RPE','Completed','Notes']];
+  sess.exercises.forEach(ex => {
+    ex.sets.forEach(set => {
+      rows.push([esc(sess.title), sess.date, esc(ex.name), set.setNumber, set.weight||'', set.reps||'', set.rpe||'', set.completed?'yes':'no', esc(set.notes)]);
+    });
+  });
+  const blob = new Blob([rows.map(r=>r.join(',')).join('\n')], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `workout_${sess.date}_${sess.title.replace(/\s+/g,'-').toLowerCase()}.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ─────────────────────────────────────────────
+//  RENDER: PROGRAM PICKER
+// ─────────────────────────────────────────────
+function rPicker() {
+  const hasActive = STATE.session && STATE.session.startedAt && !STATE.session.endedAt;
+  return `
+<div class="sticky-header">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div class="label" style="margin-bottom:3px">Workout Logger</div>
+      <div style="font-family:var(--ffc);font-size:22px;font-weight:700;color:var(--text)">Select Program</div>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="btn-sm btn-outline" onclick="goHistory()">History</button>
+      <button class="btn-sm btn-outline" onclick="Drive.requestDriveAccess()" title="Connect Google Drive backup" style="padding:8px 10px;font-size:14px">☁</button>
+      <a class="btn-sm btn-outline" href="./dashboard/index.html">Roadmap</a>
+    </div>
+  </div>
+  ${hasActive ? `
+  <div style="margin-top:12px;background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:var(--r2);padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:11px;color:var(--volt);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">Session in progress</div>
+      <div style="font-size:14px;font-weight:600">${STATE.session.title}</div>
+    </div>
+    <button class="btn-sm btn-primary" onclick="STATE.view='session';render()">Resume →</button>
+  </div>` : ''}
+</div>
+<div style="padding:12px">
+  ${rNextWorkoutBanner()}
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    ${PROGRAMS.map(p => `
+    <div onclick="loadProgram('${p.id}')" style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r3);padding:14px;cursor:pointer;transition:var(--tr);position:relative;overflow:hidden;min-height:124px;display:flex;flex-direction:column" onmouseenter="this.style.borderColor='var(--volt-border)';this.style.background='var(--surf3)'" onmouseleave="this.style.borderColor='var(--border)';this.style.background='var(--surf2)'" ontouchstart="this.style.borderColor='var(--volt-border)';this.style.background='var(--surf3)'" ontouchend="this.style.borderColor='var(--border)';this.style.background='var(--surf2)'">
+      <div style="font-family:var(--ffc);font-size:28px;font-weight:700;color:var(--volt);line-height:1;margin-bottom:4px">${p.label}</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">${p.tag}</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${p.description}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:auto">${p.exercises.length} exercises</div>
+    </div>`).join('')}
+  </div>
+  <button class="btn-outline" style="width:100%;margin-top:12px;min-height:44px;font-size:13px;padding:10px 16px" onclick="loadBlank()">+ Start blank session</button>
+</div>`;
+}
+
+function loadProgram(id) {
+  const prog = PROGRAMS.find(p => p.id === id);
+  if (!prog) return;
+  // If active session exists, ask before replacing
+  if (STATE.session && STATE.session.startedAt && !STATE.session.endedAt) {
+    if (!confirm('You have an active session. Start a new one? (Current session will be saved to history.)')) return;
+    saveToHistory(STATE.session);
+  }
+  STATE.session = sessionFromProgram(prog);
+  buildSessionSuggestions(STATE.session);
+  advanceRotation();
+  STATE.view = 'session';
+  persist();
+  render();
+}
+
+function loadBlank() {
+  if (STATE.session && STATE.session.startedAt && !STATE.session.endedAt) {
+    if (!confirm('You have an active session. Start a new one?')) return;
+    saveToHistory(STATE.session);
+  }
+  STATE.session = {
+    id:uid(), programId:null, title:'', tag:'', date:today(),
+    notes:'', startedAt:null, endedAt:null, exercises:[]
+  };
+  STATE.view = 'session';
+  persist();
+  render();
+}
+
+// ─────────────────────────────────────────────
+//  RENDER: SESSION
+// ─────────────────────────────────────────────
+function rSession() {
+  const sess = STATE.session;
+  if (!sess) { STATE.view='picker'; return rPicker(); }
+  const active = !!sess.startedAt && !sess.endedAt;
+  const done = !!sess.endedAt;
+  const totalSets = sess.exercises.reduce((a,e)=>a+e.sets.length,0);
+  const completedSets = totalCompletedSets(sess);
+
+  return `
+<div class="sticky-header">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <button class="btn-ghost btn-sm" onclick="STATE.view='picker';render()" style="padding:6px 10px">← Programs</button>
+    <div style="display:flex;gap:6px;align-items:flex-start">
+      <div style="text-align:right">
+        <button class="btn-sm btn-outline" onclick="exportCSV(STATE.session)" title="Spreadsheet export only — not importable">Export Session CSV</button>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">Spreadsheet only · not importable</div>
+      </div>
+      <button class="btn-sm btn-outline" onclick="goHistory()">History</button>
+    </div>
+  </div>
+  <input placeholder="Session title" value="${sess.title||''}" style="font-size:20px;font-weight:700;background:transparent;border:none;border-bottom:1px solid var(--border2);border-radius:0;padding:5px 0;letter-spacing:.01em;margin-bottom:10px" oninput="STATE.session.title=this.value;persist()">
+  <div style="display:flex;gap:8px;margin-bottom:10px">
+    <input type="date" value="${sess.date||today()}" style="font-size:13px;flex:0 0 auto;width:152px;padding:8px 10px" oninput="STATE.session.date=this.value;persist()">
+    <input placeholder="Notes (optional)" value="${sess.notes||''}" style="font-size:13px;padding:8px 10px" oninput="STATE.session.notes=this.value;persist()">
+  </div>
+  ${totalSets>0 ? `
+  <div style="margin-bottom:10px">
+    <div style="height:4px;background:var(--surf4);border-radius:2px;overflow:hidden;margin-bottom:4px">
+      <div style="height:100%;background:var(--volt);width:${Math.round(completedSets/totalSets*100)}%;transition:width .4s"></div>
+    </div>
+    <div style="font-size:11px;color:var(--text3)">${completedSets} of ${totalSets} sets logged</div>
+  </div>` : ''}
+  <div style="display:flex;align-items:center;gap:8px">
+    ${!sess.startedAt ? `<button class="btn-primary btn-sm" style="flex:1" onclick="startSession()">Start Session</button>` :
+      done ? `<span class="vlabel">Complete</span><span style="font-size:12px;color:var(--text2);margin-left:4px">${new Date(sess.startedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})} – ${new Date(sess.endedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>` :
+      `<span class="vlabel">Live</span><span style="font-size:12px;color:var(--text2);margin-left:4px">${new Date(sess.startedAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>`
+    }
+    ${active ? `<button class="btn-sm btn-danger" style="margin-left:auto;border:1px solid var(--red)" onclick="endSession()">End Session</button>` : ''}
+    ${done ? `<button class="btn-sm btn-outline" style="margin-left:auto" onclick="STATE.view='picker';render()">New Session</button>` : ''}
+  </div>
+</div>
+${rTimerBlock()}
+${sess.exercises.map((ex,i) => rExercise(ex,i)).join('')}
+<div style="padding:14px 16px 0">
+  <button class="btn-primary" style="width:100%;min-height:52px;font-size:15px;letter-spacing:.05em;border-radius:var(--r3)" onclick="openExSheet()">+ Add Exercise</button>
+</div>
+<div style="margin:20px 16px 0;padding:14px 16px;background:var(--surf1);border-radius:var(--r2);border:1px solid var(--border)">
+  <div class="label" style="margin-bottom:5px">How to use</div>
+  <div style="font-size:12px;color:var(--text2);line-height:1.7">Log weight + reps → tap checkbox to mark set done → start rest timer → repeat. Session auto-saves continuously. Use <strong>Export Session CSV</strong> for spreadsheet use. Use <strong>Export Backup (JSON)</strong> in History to save and restore all your data.</div>
+</div>`;
+}
+
+function startSession() {
+  STATE.session.startedAt = new Date().toISOString();
+  persist();
+  render();
+}
+
+function endSession() {
+  if (!confirm('End and save this session?')) return;
+  STATE.session.endedAt = new Date().toISOString();
+  saveToHistory(STATE.session);
+  persist(true); // true = sync history to Drive
+  render();
+}
+
+// ─────────────────────────────────────────────
+//  RENDER: TIMER BLOCK
+// ─────────────────────────────────────────────
+function rTimerBlock() {
+  const m = Math.floor(STATE.timer.seconds/60);
+  const s = STATE.timer.seconds % 60;
+  const str = `${m}:${s.toString().padStart(2,'0')}`;
+  const done = !STATE.timer.running && STATE.timer.seconds===0;
+  return `
+<div style="margin:14px 16px 0;background:var(--surf2);border:1px solid var(--border2);border-radius:var(--r3);padding:16px 18px;overflow:hidden;position:relative">
+  <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--border)">
+    <div id="tbar" style="height:100%;background:var(--volt);width:0;transition:none"></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <span class="label">Rest Timer</span>
+    <span id="tdisplay" style="font-family:var(--ffc);font-size:32px;font-weight:700;letter-spacing:.04em;color:${done?'var(--text3)':'var(--volt)'}">${str}</span>
+  </div>
+  <div style="display:flex;gap:7px">
+    ${[[60,'60s'],[90,'90s'],[120,'2:00'],[180,'3:00']].map(([v,l])=>`<button class="btn-sm btn-outline" style="flex:1;min-width:0" onclick="startTimer(${v})">${l}</button>`).join('')}
+    <button class="btn-sm btn-ghost" onclick="resetTimer()">Reset</button>
+  </div>
+</div>`;
+}
+
+// ─────────────────────────────────────────────
+//  RENDER: EXERCISE CARD
+// ─────────────────────────────────────────────
+function rExercise(ex, idx) {
+  const sess = STATE.session;
+  const doneCount = ex.sets.filter(s=>s.completed).length;
+  const total = ex.sets.length;
+  const allDone = total > 0 && doneCount === total;
+  const exIdx = idx;
+
+  return `
+<div data-exid="${ex.id}" style="margin:12px 16px 0;background:var(--surf1);border:1px solid ${allDone?'var(--volt-border)':'var(--border)'};border-radius:var(--r3);overflow:hidden;transition:border-color .25s">
+  <div style="padding:14px 16px 12px;border-bottom:1px solid ${allDone?'var(--volt-border)':'var(--border)'}">
+    <div style="display:flex;align-items:flex-start;gap:8px">
+      <div style="display:flex;flex-direction:column;gap:2px;padding-top:3px;flex-shrink:0">
+        <button class="btn-ghost btn-sm" style="padding:3px 7px;font-size:10px;min-height:auto" onclick="moveEx(${exIdx},-1)">▲</button>
+        <button class="btn-ghost btn-sm" style="padding:3px 7px;font-size:10px;min-height:auto" onclick="moveEx(${exIdx},1)">▼</button>
+      </div>
+      <div style="flex:1;min-width:0">
+        <input placeholder="Exercise name" value="${ex.name||''}" style="font-size:18px;font-weight:700;background:transparent;border:none;border-bottom:1px solid var(--border);border-radius:0;padding:4px 0;width:100%;margin-bottom:9px" oninput="STATE.session.exercises[${exIdx}].name=this.value;persist()">
+        <div style="display:flex;gap:7px">
+          <input placeholder="Sets" value="${ex.targetSets||''}" style="font-size:13px;padding:7px 10px;width:65px;flex:none" oninput="STATE.session.exercises[${exIdx}].targetSets=this.value;persist()">
+          <input placeholder="Rep range" value="${ex.targetRepRange||''}" style="font-size:13px;padding:7px 10px;flex:1;min-width:0" oninput="STATE.session.exercises[${exIdx}].targetRepRange=this.value;persist()">
+        </div>
+        ${ex.notes ? `<div style="margin-top:9px;font-size:12px;color:var(--text3);line-height:1.55;padding:8px 11px;background:var(--surf3);border-radius:7px;border-left:2px solid var(--volt-border)">${ex.notes}</div>` : ''}
+      </div>
+      <button class="btn-ghost btn-danger btn-sm" style="padding:6px;min-height:auto;font-size:13px;flex-shrink:0" onclick="removeEx('${ex.id}')">✕</button>
+    </div>
+    ${total > 0 ? `
+    <div style="display:flex;align-items:center;gap:8px;margin-top:11px">
+      <div style="flex:1;height:3px;background:var(--surf4);border-radius:2px;overflow:hidden">
+        <div style="height:100%;background:${allDone?'var(--volt)':'var(--volt-dim)'};width:${Math.round(doneCount/total*100)}%;transition:width .3s"></div>
+      </div>
+      <span style="font-size:11px;color:${allDone?'var(--volt)':'var(--text2)'};font-weight:700">${doneCount}/${total}</span>
+    </div>` : ''}
+  </div>
+  <div style="background:var(--bg)">
+    <div style="display:grid;grid-template-columns:24px 1fr 1fr 50px 30px 26px;gap:4px;padding:7px 14px;border-bottom:${(ex.matchStatus==='fallback-unresolved'||ex.suggestion)?'none':'1px solid var(--border)'}">
+      ${['#','Wt','Reps','RPE','',''].map(l=>`<span style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text3)">${l}</span>`).join('')}
+    </div>
+    ${(ex.matchStatus==='fallback-unresolved'||ex.suggestion) ? `<div style="padding:0 14px 8px;border-bottom:1px solid var(--border)">${rSuggestionHint(ex)}</div>` : ''}
+    ${ex.sets.map((set,si) => `
+    <div style="display:grid;grid-template-columns:24px 1fr 1fr 50px 30px 26px;gap:4px;align-items:center;padding:5px 14px;border-bottom:1px solid var(--border);background:${set.completed?'var(--volt-subtle)':'transparent'};transition:background .2s">
+      <span style="font-family:var(--ffc);font-size:13px;font-weight:700;color:${set.completed?'var(--volt)':'var(--text3)'}">${set.setNumber}</span>
+      <input type="text" inputmode="decimal" value="${set.weight||''}" placeholder="lbs" style="font-size:16px;padding:9px 5px;text-align:center;opacity:${set.completed?.6:1}" oninput="STATE.session.exercises[${exIdx}].sets[${si}].weight=this.value;persist()">
+      <input type="text" inputmode="numeric" value="${set.reps||''}" placeholder="reps" style="font-size:16px;padding:9px 5px;text-align:center;opacity:${set.completed?.6:1}" oninput="STATE.session.exercises[${exIdx}].sets[${si}].reps=this.value;persist()">
+      <input type="text" inputmode="decimal" value="${set.rpe||''}" placeholder="—" style="font-size:14px;padding:9px 4px;text-align:center;opacity:${set.completed?.6:1}" oninput="STATE.session.exercises[${exIdx}].sets[${si}].rpe=this.value;persist()">
+      <div class="chk ${set.completed?'on':''}" onclick="toggleSet('${ex.id}','${set.id}')"></div>
+      <button class="btn-ghost btn-sm" style="padding:4px;min-height:auto;color:var(--text3);font-size:11px" onclick="removeSet('${ex.id}','${set.id}')">✕</button>
+    </div>`).join('')}
+  </div>
+  <div style="padding:10px 14px;background:var(--surf1)">
+    <button class="btn-sm btn-outline" style="width:100%;font-weight:600" onclick="addSet('${ex.id}')">+ Add Set</button>
+  </div>
+</div>`;
+}
+
+// ─────────────────────────────────────────────
+//  RENDER: HISTORY
+// ─────────────────────────────────────────────
+function rHistory() {
+  const hist = STATE.history;
+  return `
+<div class="sticky-header">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+    <button class="btn-ghost btn-sm" onclick="STATE.view='picker';render()" style="padding:6px 10px">← Programs</button>
+    <span class="label">Session History</span>
+    <div style="margin-left:auto;display:flex;gap:6px">
+      <button class="btn-sm btn-outline" onclick="exportBackup()" title="Download full backup JSON">Export Backup (JSON)</button>
+      <label class="btn-sm btn-outline" style="cursor:pointer;display:inline-flex;align-items:center;padding:8px 12px;font-size:12px;min-height:38px;border-radius:8px;border:1px solid var(--border2);color:var(--text2);background:transparent" title="Restore from backup JSON">
+        Import Backup
+        <input type="file" accept="application/json" style="display:none" onchange="importBackup(event)">
+      </label>
+    </div>
+  </div>
+  <div style="padding:6px 0 2px;font-size:11px;color:var(--text3)">JSON = full backup &amp; restore · CSV = spreadsheet export only, not importable</div>
+</div>
+<div style="padding:14px 16px">
+  ${hist.length===0 ? `<div style="color:var(--text3);font-size:14px;padding:32px 0;text-align:center">No saved sessions yet.<br><span style="font-size:12px">Complete a session to see it here.</span></div>` : ''}
+  ${hist.map((h,i) => `
+  <div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:border-color .15s" onclick="previewSession(${i})" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div style="min-width:0;flex:1">
+        <div style="font-weight:700;font-size:15px;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h.title||'Untitled'}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span class="pill">${h.date}</span>
+          <span class="pill">${h.exercises.length} exercises</span>
+          <span class="pill">${totalCompletedSets(h)} sets</span>
+          ${h.endedAt ? `<span class="pill">${Math.round((new Date(h.endedAt)-new Date(h.startedAt))/60000)} min</span>` : '<span class="pill" style="color:var(--volt)">incomplete</span>'}
+        </div>
+      </div>
+      <button class="btn-ghost btn-sm" style="color:var(--text3);padding:4px;min-height:auto;flex-shrink:0;margin-left:8px" onclick="event.stopPropagation();deleteHistory(${i})">✕</button>
+    </div>
+  </div>`).join('')}
+</div>`;
+}
+
+function rPreview(idx) {
+  const h = STATE.history[idx];
+  if (!h) return rHistory();
+  return `
+<div class="sticky-header">
+  <button class="btn-ghost btn-sm" onclick="goHistory()" style="margin-bottom:8px;padding:6px 10px">← History</button>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start">
+    <div>
+      <div style="font-size:20px;font-weight:700;margin-bottom:5px">${h.title||'Untitled'}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="pill">${h.date}</span>
+        ${h.endedAt ? `<span class="pill">${Math.round((new Date(h.endedAt)-new Date(h.startedAt))/60000)} min</span>` : ''}
+        <span class="pill">${totalCompletedSets(h)} sets logged</span>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <button class="btn-sm btn-outline" onclick="exportCSV(STATE.history[${idx}])">Export Session CSV</button>
+      <div style="font-size:10px;color:var(--text3);margin-top:3px">Spreadsheet only · not importable</div>
+    </div>
+  </div>
+</div>
+<div style="padding:14px 16px">
+  ${h.exercises.map(ex => `
+  <div style="background:var(--surf2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;margin-bottom:8px">
+    <div style="font-weight:700;font-size:15px;margin-bottom:3px">${ex.name||'Unnamed'}</div>
+    ${ex.notes ? `<div style="font-size:12px;color:var(--text3);margin-bottom:8px">${ex.notes}</div>` : ''}
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px">
+      ${ex.sets.filter(s=>s.completed).map(s=>`<span class="pill" style="background:var(--volt-subtle);border-color:var(--volt-border);color:var(--text)">${s.weight||'—'} × ${s.reps||'—'}${s.rpe?` <span style="color:var(--text3)">@${s.rpe}</span>`:''}</span>`).join('')}
+      ${ex.sets.filter(s=>s.completed).length===0 ? `<span style="color:var(--text3);font-size:12px">No completed sets</span>` : ''}
+    </div>
+  </div>`).join('')}
+</div>`;
+}
+
+// ─────────────────────────────────────────────
+//  EXERCISE LIBRARY
+// ─────────────────────────────────────────────
+function loadCustomExercises() {
+  try { return JSON.parse(localStorage.getItem(LS_EXERCISES)) || []; } catch(e) { return []; }
+}
+function saveCustomExercises(list) {
+  try { localStorage.setItem(LS_EXERCISES, JSON.stringify(list)); } catch(e) {}
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function openExSheet() {
+  const el = document.getElementById('ex-sheet');
+  el.querySelector('.sheet').innerHTML = exSheetBody();
+  el.style.display = 'flex';
+  setTimeout(() => { const inp = document.getElementById('ex-name-inp'); if(inp) inp.focus(); }, 80);
+}
+
+function closeExSheet() {
+  document.getElementById('ex-sheet').style.display = 'none';
+}
+
+function exSheetBody() {
+  const lib = loadCustomExercises();
+  const libHtml = lib.length ? `
+    <div class="label" style="margin-bottom:8px">Saved Exercises</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:18px">
+      ${lib.map(ex => `
+      <div class="lib-row" onclick="addExFromLib('${ex.id}')">
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(ex.name)}</div>
+          ${ex.targetSets || ex.targetRepRange ? `<div style="font-size:12px;color:var(--text3);margin-top:2px">${[ex.targetSets && escHtml(ex.targetSets)+' sets', ex.targetRepRange && escHtml(ex.targetRepRange)+' reps'].filter(Boolean).join(' · ')}</div>` : ''}
+        </div>
+        <button class="btn-danger btn-sm" style="flex-shrink:0;min-height:40px;padding:8px 12px" onclick="event.stopPropagation();deleteLibEx('${ex.id}')">✕</button>
+      </div>`).join('')}
+    </div>
+    <div style="height:1px;background:var(--border);margin-bottom:18px"></div>` : '';
+
+  return `
+    <div class="sheet-handle"></div>
+    <div style="font-family:var(--ffc);font-size:22px;font-weight:700;margin-bottom:18px">Add Exercise</div>
+    ${libHtml}
+    <div class="label" style="margin-bottom:10px">New Exercise</div>
+    <input id="ex-name-inp" type="text" placeholder="Exercise name" autocomplete="off"
+      style="margin-bottom:10px;font-size:16px"
+      onkeydown="if(event.key==='Enter'){document.getElementById('ex-sets-inp').focus()}">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <input id="ex-sets-inp" type="text" inputmode="numeric" placeholder="Sets  (e.g. 3)"
+        style="font-size:16px"
+        onkeydown="if(event.key==='Enter'){document.getElementById('ex-reps-inp').focus()}">
+      <input id="ex-reps-inp" type="text" placeholder="Reps  (e.g. 8–12)"
+        style="font-size:16px"
+        onkeydown="if(event.key==='Enter'){submitExToSession(false)}">
+    </div>
+    <div id="ex-err" style="color:var(--red);font-size:13px;min-height:20px;margin-bottom:8px"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <button class="btn-primary" style="min-height:52px;font-size:15px;letter-spacing:.03em"
+        onclick="submitExToSession(false)">Add to Session</button>
+      <button class="btn-outline" style="min-height:52px;font-size:15px"
+        onclick="submitExToSession(true)">Add + Save</button>
+    </div>
+    <button class="btn-ghost" style="width:100%;font-size:13px;color:var(--text3);min-height:44px"
+      onclick="closeExSheet();addExercise()">+ Add blank exercise instead</button>`;
+}
+
+function submitExToSession(save) {
+  const nameEl = document.getElementById('ex-name-inp');
+  const setsEl = document.getElementById('ex-sets-inp');
+  const repsEl = document.getElementById('ex-reps-inp');
+  const errEl  = document.getElementById('ex-err');
+  const name   = nameEl ? nameEl.value.trim() : '';
+
+  if (!name) {
+    if (errEl) errEl.textContent = 'Exercise name is required.';
+    if (nameEl) nameEl.focus();
+    return;
+  }
+  if (errEl) errEl.textContent = '';
+
+  const sets = setsEl ? setsEl.value.trim() : '';
+  const reps = repsEl ? repsEl.value.trim() : '';
+
+  if (save) {
+    const lib = loadCustomExercises();
+    const isDupe = lib.some(e => e.name.trim().toLowerCase() === name.toLowerCase());
+    if (!isDupe) {
+      lib.push({ id: uid(), name, targetSets: sets, targetRepRange: reps, notes: '', restSeconds: 90, equipment: 'dumbbell' });
+      saveCustomExercises(lib);
+    }
+  }
+
+  STATE.session.exercises.push({
+    id: uid(),
+    exerciseId: null,
+    exerciseNameSnapshot: name,
+    equipment: 'dumbbell',
+    matchStatus: 'fallback-new',
+    suggestion: null,
+    virtualWeight: null,
+    wasReanchored: false,
+    name,
+    targetSets: sets, targetRepRange: reps,
+    notes: '', restSeconds: 90, sets: []
+  });
+  persist();
+  closeExSheet();
+  render();
+  setTimeout(() => {
+    const cards = document.querySelectorAll('[data-exid]');
+    if (cards.length) { const inp = cards[cards.length-1].querySelector('input'); if(inp) inp.focus(); }
+  }, 80);
+}
+
+function addExFromLib(id) {
+  const ex = loadCustomExercises().find(e => e.id === id);
+  if (!ex || !STATE.session) return;
+  const newEx = {
+    id: uid(),
+    exerciseId: ex.id || null,
+    exerciseNameSnapshot: ex.name,
+    equipment: ex.equipment || 'dumbbell',
+    matchStatus: 'fallback-new',
+    suggestion: null,
+    virtualWeight: null,
+    wasReanchored: false,
+    name: ex.name,
+    targetSets: ex.targetSets, targetRepRange: ex.targetRepRange,
+    notes: ex.notes || '', restSeconds: ex.restSeconds || 90, sets: []
+  };
+  STATE.session.exercises.push(newEx);
+  buildSessionSuggestions(STATE.session);
+  persist();
+  closeExSheet();
+  render();
+  vibrate(50);
+}
+
+function deleteLibEx(id) {
+  saveCustomExercises(loadCustomExercises().filter(e => e.id !== id));
+  // Refresh sheet in-place without closing
+  const el = document.getElementById('ex-sheet');
+  if (el && el.style.display !== 'none') {
+    el.querySelector('.sheet').innerHTML = exSheetBody();
+    setTimeout(() => { const inp = document.getElementById('ex-name-inp'); if(inp) inp.focus(); }, 50);
+  }
+}
+
+// ─────────────────────────────────────────────
+//  IRON LOGIC — PROGRESSION ENGINE
+// ─────────────────────────────────────────────
+const DB_CEILING       = 40;
+const BARBELL_MAX      = 1000;
+const STARTING_WEIGHTS = {
+  'barbell-bench-press':       95,
+  'barbell-row':               95,
+  'overhead-press':            65,
+  'barbell-back-squat':        95,
+  'romanian-deadlift-barbell': 95,
+  'pull-up-weighted':           0,
+  'incline-db-press':          25,
+  'db-shoulder-press':         20,
+  'db-curl':                   15,
+  'db-lateral-raise':          15,
+  'db-bulgarian-split-squat':  20,
+  'db-walking-lunge':          20,
+  'chin-up':                    0,
+  'db-overhead-tricep-extension': 20,
+  'db-row':                    35,
+  'db-rear-delt-fly':          15,
+  'barbell-front-squat':       65,
+  'lying-db-leg-curl':         15,
+};
+
+function parseGymInput(val) {
+  const s = String(val).trim();
+  if (/,/.test(s)) return null;       // reject comma-decimal (e.g. "50,5" → would become 505)
+  if (/kg/i.test(s)) return null;     // reject kg suffix (app is lb-only)
+  const n = parseFloat(s.replace(/[^\d.-]/g, ''));
+  return (isNaN(n) || n < 0) ? null : n;
+}
+
+function normalizeExerciseName(name) {
+  return String(name).trim().toLowerCase()
+    .replace(/[^\w\s-]/g, ' ')  // remove non-word-non-hyphen chars (parens, slashes); keep hyphens
+    .replace(/\s+/g, '-')        // spaces → hyphens
+    .replace(/-+/g, '-')         // collapse multiple hyphens
+    .replace(/^-|-$/g, '');      // strip leading/trailing hyphens
+}
+
+function snapWeight(val, equipment) {
+  const inc = (equipment === 'barbell' && val >= 100) ? 5 : 2.5;
+  return Math.round(val / inc) * inc;
+}
+
+function buildExerciseRegistry() {
+  const byId   = new Map();
+  const bySlug = new Map();
+  const reg = ex => {
+    if (ex.id) byId.set(ex.id, ex);
+    const slug = normalizeExerciseName(ex.name);
+    if (slug && !bySlug.has(slug)) bySlug.set(slug, ex);
+  };
+  PROGRAMS.forEach(p => p.exercises.forEach(reg));
+  loadCustomExercises().forEach(ex => reg({ ...ex, equipment: ex.equipment || 'dumbbell' }));
+  return { byId, bySlug };
+}
+
+// Returns { set, exercise, session } for the most-recent completed set, or null.
+function getLastSet(exerciseId, normalizedSlug, history) {
+  for (let si = 0; si < history.length; si++) {
+    const sess = history[si];
+    for (let ei = 0; ei < sess.exercises.length; ei++) {
+      const ex = sess.exercises[ei];
+      const idMatch   = exerciseId && ex.exerciseId === exerciseId;
+      const slugMatch = !idMatch && normalizedSlug && normalizeExerciseName(ex.name) === normalizedSlug;
+      if (idMatch || slugMatch) {
+        const done = (ex.sets || []).filter(s => s.completed && s.weight != null && s.reps != null);
+        if (done.length) return { set: done[done.length - 1], exercise: ex, session: sess };
+      }
+    }
+  }
+  return null;
+}
+
+// Returns { suggestedWeight, virtualWeight, technique, hint } or null.
+function computeProgression(lastRecord, equipment, exerciseId) {
+  if (!lastRecord) {
+    const startW = STARTING_WEIGHTS[exerciseId] ?? null;
+    return startW !== null
+      ? { suggestedWeight: startW, virtualWeight: startW, technique: null, hint: 'Starting weight' }
+      : null;
+  }
+  const { set, exercise } = lastRecord;
+  const weight = parseGymInput(set.weight);
+  const rpe    = parseGymInput(set.rpe);
+  if (weight === null) return null;
+  if (weight <= 0 && equipment !== 'bodyweight') return null;
+
+  const parsedVirtual = parseGymInput(exercise.virtualWeight);
+  const prevVirtual = (parsedVirtual !== null && parsedVirtual > 0) ? parsedVirtual : weight;
+  const newVirtual  = (rpe === null || rpe <= 8) ? prevVirtual * 1.025 : prevVirtual;
+
+  const prevSnapped = snapWeight(weight, equipment);
+
+  if (equipment === 'dumbbell') {
+    const gap = newVirtual - DB_CEILING;
+    if (gap > 0) {
+      let technique = gap < 5 ? 'Tempo 3-1-1-0' : gap <= 15 ? 'Myo-reps' : 'Myo-reps+';
+      return { suggestedWeight: snapWeight(Math.min(newVirtual, DB_CEILING), equipment), virtualWeight: newVirtual, technique, hint: null, isRepTarget: false };
+    }
+  }
+
+  const snapped = snapWeight(Math.min(newVirtual, BARBELL_MAX), equipment);
+  return { suggestedWeight: snapped, virtualWeight: newVirtual, technique: null, hint: null, isRepTarget: snapped === prevSnapped };
+}
+
+// Mutates each session exercise with suggestion + matchStatus.
+function buildSessionSuggestions(session) {
+  if (!session || !session.exercises) return;
+  const history  = STATE.history;
+  const registry = buildExerciseRegistry();
+  session.exercises.forEach(ex => {
+    const regEx     = ex.exerciseId ? registry.byId.get(ex.exerciseId) : registry.bySlug.get(normalizeExerciseName(ex.name));
+    const equipment = ex.equipment || regEx?.equipment || 'barbell';
+    if (!ex.matchStatus || ex.matchStatus === 'matched') {
+      ex.matchStatus = regEx ? 'matched' : (ex.exerciseId ? 'fallback-unresolved' : 'fallback-new');
+    }
+    const lastRecord = getLastSet(ex.exerciseId, normalizeExerciseName(ex.name), history);
+    const prog = computeProgression(lastRecord, equipment, ex.exerciseId);
+    ex.suggestion    = prog || null;
+    ex.virtualWeight = prog ? prog.virtualWeight : null;
+  });
+}
+
+// Returns HTML hint string for an exercise card.
+function rSuggestionHint(ex) {
+  if (ex.matchStatus === 'fallback-unresolved') {
+    return `<div style="margin-top:6px;font-size:12px;color:#f5a623;background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:6px;padding:6px 10px">⚠ Exercise not recognized — no progression data. Log a set to begin tracking.</div>`;
+  }
+  const s = ex.suggestion;
+  if (!s) return '';
+  if (s.isRepTarget) {
+    return `<div style="margin-top:6px;font-size:12px;color:var(--text2)">Hold <span style="font-weight:700;color:var(--text)">~${s.suggestedWeight} lb</span> <span style="color:var(--text3)">— target +1 rep</span></div>`;
+  }
+  const tag  = s.technique ? `<span style="margin-left:6px;font-size:10px;color:var(--volt);background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:4px;padding:1px 6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">${s.technique}</span>` : '';
+  const hint = s.hint ? `<span style="color:var(--text3)"> · ${s.hint}</span>` : '';
+  return `<div style="margin-top:6px;font-size:12px;color:var(--text2)">Suggested: <span style="font-weight:700;color:var(--text)">~${s.suggestedWeight} lb</span>${tag}${hint}</div>`;
+}
+
+// Writes virtualWeight back to history records. Called at saveToHistory().
+function finalizeSessionExercises(sess) {
+  if (!sess || !sess.exercises) return;
+  sess.exercises.forEach(ex => {
+    const done = (ex.sets || []).filter(s => s.completed);
+    if (!done.length) return;
+    const logged = parseGymInput(done[done.length - 1].weight);
+    if (logged === null) return;
+    const suggested = ex.suggestion ? ex.suggestion.suggestedWeight : null;
+    if (suggested !== null && Math.abs(logged - suggested) > Math.max(suggested * 0.10, 5.0)) {
+      const atCeiling = ex.equipment === 'dumbbell' &&
+        logged >= DB_CEILING - 0.5 && logged <= DB_CEILING + 0.5;
+      if (atCeiling && ex.suggestion && ex.suggestion.virtualWeight != null) {
+        ex.virtualWeight = ex.suggestion.virtualWeight;
+        ex.wasReanchored = false;
+      } else {
+        ex.virtualWeight = logged;
+        ex.wasReanchored = true;
+      }
+    }
+    if (ex.virtualWeight == null) ex.virtualWeight = logged;
+  });
+}
+
+// ─────────────────────────────────────────────
+//  ROTATION TRACKER
+// ─────────────────────────────────────────────
+const ROTATION_ORDER = ['upper-a', 'upper-b', 'lower-a', 'lower-b'];
+
+function getRotation() {
+  try { const raw = localStorage.getItem(LS_ROTATION); if (raw) return JSON.parse(raw); } catch(e) {}
+  return { order: ROTATION_ORDER.slice(), index: 0 };
+}
+function saveRotation(rot) { try { localStorage.setItem(LS_ROTATION, JSON.stringify(rot)); } catch(e) {} }
+function advanceRotation() {
+  const rot = getRotation();
+  rot.index = (rot.index + 1) % rot.order.length;
+  saveRotation(rot);
+}
+function getNextProgramId() {
+  const rot = getRotation();
+  return rot.order[rot.index % rot.order.length];
+}
+
+function rNextWorkoutBanner() {
+  const nextId   = getNextProgramId();
+  const nextProg = PROGRAMS.find(p => p.id === nextId);
+  if (!nextProg) return '';
+  return `<div style="margin-bottom:10px;min-height:72px;background:var(--volt-subtle);border:1px solid var(--volt-border);border-radius:var(--r2);padding:12px 14px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:11px;color:var(--volt);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:2px">Up Next</div>
+      <div style="font-size:14px;font-weight:600">${nextProg.label} <span style="font-weight:400;color:var(--text2)">· ${nextProg.tag}</span></div>
+    </div>
+    <button class="btn-sm btn-primary" onclick="loadProgram('${nextProg.id}')">Start →</button>
+  </div>`;
+}
+
+// ─────────────────────────────────────────────
+//  MIGRATION — DRY RUN + APPLY
+// ─────────────────────────────────────────────
+function runMigrationDryRun(history) {
+  const registry = buildExerciseRegistry();
+  const rows = history.flatMap(sess =>
+    (sess.exercises || []).map(ex => {
+      const slug = normalizeExerciseName(ex.name);
+      const match = registry.bySlug.get(slug);
+      return {
+        session: sess.title || sess.id,
+        date: sess.date,
+        name: ex.name,
+        exerciseId_before: ex.exerciseId || null,
+        exerciseId_after:  ex.exerciseId || (match ? match.id : null),
+        status: ex.exerciseId ? 'already-set' : match ? 'will-match' : 'unresolved',
+      };
+    })
+  );
+  console.group('[Iron Logic] Migration Dry Run — verify before/after');
+  console.table(rows);
+  console.groupEnd();
+}
+
+function applyMigration(history) {
+  const registry = buildExerciseRegistry();
+  history.forEach(sess => {
+    (sess.exercises || []).forEach(ex => {
+      if (!ex.exerciseId) {
+        const match = registry.bySlug.get(normalizeExerciseName(ex.name));
+        ex.exerciseId           = match ? match.id : null;
+        ex.exerciseNameSnapshot = ex.exerciseNameSnapshot || ex.name;
+        ex.equipment            = ex.equipment || (match ? match.equipment : 'barbell');
+        ex.matchStatus          = match ? 'matched' : 'fallback-unresolved';
+      }
+      (ex.sets || []).forEach(s => {
+        const w = parseGymInput(s.weight); if (w !== null) s.weight = w;
+        const r = parseGymInput(s.reps);   if (r !== null) s.reps   = r;
+        const rpe = parseGymInput(s.rpe);  if (rpe !== null) s.rpe  = rpe;
+      });
+    });
+  });
+}
+
+function runMigration() {
+  try {
+    if (localStorage.getItem(LS_SCHEMA_V1)) return;
+    if (!STATE.history || STATE.history.length === 0) {
+      localStorage.setItem(LS_SCHEMA_V1, '1');
+      return;
+    }
+    runMigrationDryRun(STATE.history);
+    applyMigration(STATE.history);
+    try { localStorage.setItem(LS_HIST, JSON.stringify(STATE.history)); } catch(e) {}
+    localStorage.setItem(LS_SCHEMA_V1, '1');
+    console.log('[Iron Logic] Migration applied successfully.');
+  } catch(e) {
+    console.warn('[Iron Logic] Migration error:', e);
+    try { localStorage.setItem(LS_SCHEMA_V1, 'error'); } catch(_) {}
+  }
+}
+
+// ─────────────────────────────────────────────
+//  BACKUP / RESTORE
+// ─────────────────────────────────────────────
+function exportBackup() {
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    history: STATE.history,
+    customExercises: loadCustomExercises(),
+    rotation: getRotation(),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `iron-logic-backup-${today()}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importBackup(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data.history)) throw new Error('Invalid backup format — missing history array');
+      if (!confirm(`Import ${data.history.length} sessions? This merges with existing history.`)) return;
+      const map = new Map();
+      [...STATE.history, ...data.history].forEach(h => {
+        const ex = map.get(h.id);
+        if (!ex) { map.set(h.id, h); return; }
+        if ((h.savedAt || h.endedAt || '') > (ex.savedAt || ex.endedAt || '')) map.set(h.id, h);
+      });
+      STATE.history = [...map.values()]
+        .sort((a, b) => (b.savedAt || b.date || '') > (a.savedAt || a.date || '') ? 1 : -1)
+        .slice(0, 50);
+      if (Array.isArray(data.customExercises)) saveCustomExercises(data.customExercises);
+      persist(true);
+      alert(`Imported. ${STATE.history.length} sessions in history.`);
+      render();
+    } catch(err) {
+      alert('Import failed: ' + err.message);
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// ─────────────────────────────────────────────
+//  SESSION MUTATIONS
+// ─────────────────────────────────────────────
+function addExercise() {
+  STATE.session.exercises.push({id:uid(),exerciseId:null,exerciseNameSnapshot:'',equipment:'barbell',matchStatus:'fallback-new',suggestion:null,virtualWeight:null,wasReanchored:false,name:'',targetSets:'',targetRepRange:'',notes:'',restSeconds:90,sets:[]});
+  persist(); render();
+  setTimeout(()=>{ const els=document.querySelectorAll('[data-exid] input'); if(els.length) els[els.length-4]&&els[els.length-4].focus(); },80);
+}
+
+function removeEx(id) {
+  STATE.session.exercises = STATE.session.exercises.filter(e=>e.id!==id);
+  persist(); render();
+}
+
+function moveEx(idx, dir) {
+  const t = idx+dir;
+  if (t<0||t>=STATE.session.exercises.length) return;
+  [STATE.session.exercises[idx],STATE.session.exercises[t]] = [STATE.session.exercises[t],STATE.session.exercises[idx]];
+  persist(); render();
+}
+
+function addSet(exId) {
+  const ex = STATE.session.exercises.find(e=>e.id===exId); if(!ex) return;
+  const last = ex.sets[ex.sets.length-1];
+  ex.sets.push(makeSet(ex.sets.length+1, last?last.weight:'', last?last.reps:''));
+  vibrate(); persist(); render();
+  setTimeout(()=>{ const ws=document.querySelectorAll(`[data-exid="${exId}"] input[inputmode="decimal"]`); if(ws.length) ws[ws.length-2]&&ws[ws.length-2].focus(); },80);
+}
+
+function removeSet(exId, setId) {
+  const ex = STATE.session.exercises.find(e=>e.id===exId); if(!ex) return;
+  ex.sets = ex.sets.filter(s=>s.id!==setId);
+  ex.sets.forEach((s,i)=>s.setNumber=i+1);
+  persist(); render();
+}
+
+function toggleSet(exId, setId) {
+  const ex = STATE.session.exercises.find(e=>e.id===exId); if(!ex) return;
+  const set = ex.sets.find(s=>s.id===setId); if(!set) return;
+  set.completed = !set.completed;
+  if (set.completed) {
+    // Cast-on-write: coerce string inputs to numbers at the completion boundary
+    const w = parseGymInput(set.weight); if (w !== null) set.weight = w;
+    const r = parseGymInput(set.reps);   if (r !== null) set.reps   = r;
+    const rpe = parseGymInput(set.rpe);  if (rpe !== null) set.rpe  = rpe;
+    vibrate(70);
+  }
+  persist(); render();
+}
+
+// ─────────────────────────────────────────────
+//  HISTORY ACTIONS
+// ─────────────────────────────────────────────
+function goHistory() { STATE.view='history'; render(); }
+function previewSession(idx) { STATE.previewIdx=idx; STATE.view='preview'; render(); }
+function deleteHistory(idx) {
+  if (!confirm('Delete this session?')) return;
+  STATE.history.splice(idx,1);
+  persist(true); // true = sync history to Drive
+  render();
+}
+
+// ─────────────────────────────────────────────
+//  MAIN RENDER
+// ─────────────────────────────────────────────
+function render() {
+  const app = $('app');
+  const switching = app.dataset.view && app.dataset.view !== STATE.view;
+
+  const doRender = () => {
+    switch(STATE.view) {
+      case 'picker':  app.innerHTML = rPicker(); break;
+      case 'session': app.innerHTML = rSession(); break;
+      case 'history': app.innerHTML = rHistory(); break;
+      case 'preview': app.innerHTML = rPreview(STATE.previewIdx); break;
+      default:        app.innerHTML = rPicker();
+    }
+    if (STATE.view==='session') renderTimerEl();
+    app.dataset.view = STATE.view;
+    document.querySelectorAll('#rail button[data-view]').forEach(b => {
+      b.classList.toggle('rail-active', b.dataset.view === STATE.view);
+    });
+  };
+
+  if (switching && document.startViewTransition) {
+    document.startViewTransition(doRender);
+  } else {
+    doRender();
+  }
+}
+
+// ─────────────────────────────────────────────
+//  BOOT
+// ─────────────────────────────────────────────
+hydrate();
+runMigration();
+render();
+Drive.init(); // async — silently attempts Drive auth restore
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('/iron-logic-integrated/sw.js')
+      .then(function (reg) { console.log('[SW] registered, scope:', reg.scope); })
+      .catch(function (err) { console.warn('[SW] registration failed:', err); });
+  });
+}
+</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9f50ed401b7ae1e7',t:'MTc3NzY2MDk1Mw=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
